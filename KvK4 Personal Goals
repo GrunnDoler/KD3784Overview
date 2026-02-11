@@ -1,23 +1,320 @@
-| Governor ID | Governor Name | Power | KvK KP goal | KvK death goal | KvK Score Goal |
-|---|---|---|---|---|---|
-| 190720024 | Sisu  〤3784 | 91,985,393 | 9,198,539 | 1,103,825 | 10,302,364 |
-| 199916172 | ๖T o Y o L๖ | 74,408,996 | 7,440,900 | 892,908 | 8,333,808 |
-| 197099116 | 光LordDarkness | 69,948,725 | 6,994,873 | 839,385 | 7,834,257 |
-| 194036233 | 影Hawkʸ影 | 65,935,849 | 6,593,585 | 791,230 | 7,384,815 |
-| 193869934 | Agent Altec | 65,044,076 | 6,504,408 | 780,529 | 7,284,937 |
-| 193107946 | Krongs 永 23 | 63,744,679 | 6,374,468 | 764,936 | 7,139,404 |
-| 191052762 | MajesticMallard | 61,796,841 | 6,179,684 | 741,562 | 6,921,246 |
-| 200195796 | ᵁᶜAmadaKala | 61,313,556 | 6,131,356 | 735,763 | 6,867,118 |
-| 195430795 | Ham5446 | 61,303,008 | 6,130,301 | 735,636 | 6,865,937 |
-| 193901926 | Marquis Haytham | 59,729,551 | 5,972,955 | 716,755 | 6,689,710 |
-| 192022889 | 89Bowman | 59,478,741 | 5,947,874 | 713,745 | 6,661,619 |
-| 198113009 | GrunnCat Pirate | 59,078,480 | 5,907,848 | 708,942 | 6,616,790 |
-| 194366383 | Nyx ﾒ | 57,594,590 | 5,759,459 | 691,135 | 6,450,594 |
-| 198840570 | 乂Bulbasaur乂 | 57,562,266 | 5,756,227 | 690,747 | 6,446,974 |
-| 197539017 | TakmaAdNe | 57,119,126 | 5,711,913 | 685,430 | 6,397,342 |
-| 194542576 | Marquise Ari | 57,052,368 | 5,705,237 | 684,628 | 6,389,865 |
-| 197759615 | GypsyPig | 56,504,341 | 5,650,434 | 678,052 | 6,328,486 |
-| 194285018 | kekers | 54,468,331 | 5,446,833 | 653,620 | 6,100,453 |
-| 189893847 | ㋡CAOS | 53,885,230 | 5,388,523 | 646,623 | 6,035,146 |
-| 188862304 | ㋡Ban | 52,731,669 | 5,273,167 | 632,780 | 5,905,947 |
-and continuing with all 346 entries...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KvK4 Personal Goals - Governor Rankings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95em;
+            border-bottom: 3px solid #667eea;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f4ff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        .rank {
+            font-weight: bold;
+            color: #667eea;
+            width: 50px;
+            text-align: center;
+        }
+
+        .governor-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .number {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            color: #555;
+        }
+
+        .footer {
+            padding: 20px;
+            background: #f8f9fa;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚔️ KvK4 Personal Goals</h1>
+            <p>Governor Rankings & Performance Metrics</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by Governor Name or ID...">
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Governors</h3>
+                <p id="totalGovs">346</p>
+            </div>
+            <div class="stat-card">
+                <h3>Top Power</h3>
+                <p id="topPower">91,985,393</p>
+            </div>
+            <div class="stat-card">
+                <h3>Average Power</h3>
+                <p id="avgPower">0</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Rank</th>
+                        <th>Governor ID</th>
+                        <th>Governor Name</th>
+                        <th class="number">Power</th>
+                        <th class="number">KvK KP Goal</th>
+                        <th class="number">KvK Death Goal</th>
+                        <th class="number">KvK Score Goal</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 KvK4 Rankings - Last Updated: February 11, 2026</p>
+        </div>
+    </div>
+
+    <script>
+        // Governor data
+        const governorData = [
+            { id: 190720024, name: "Sisu  〤3784", power: 91985393, kvkKpGoal: 9198539, kvkDeathGoal: 1103825, kvkScoreGoal: 10302364 },
+            { id: 199916172, name: "๖T o Y o L๖", power: 74408996, kvkKpGoal: 7440900, kvkDeathGoal: 892908, kvkScoreGoal: 8333808 },
+            { id: 197099116, name: "光LordDarkness", power: 69948725, kvkKpGoal: 6994873, kvkDeathGoal: 839385, kvkScoreGoal: 7834257 },
+            { id: 194036233, name: "影Hawkʸ影", power: 65935849, kvkKpGoal: 6593585, kvkDeathGoal: 791230, kvkScoreGoal: 7384815 },
+            { id: 193869934, name: "Agent Altec", power: 65044076, kvkKpGoal: 6504408, kvkDeathGoal: 780529, kvkScoreGoal: 7284937 },
+            { id: 193107946, name: "Krongs 永 23", power: 63744679, kvkKpGoal: 6374468, kvkDeathGoal: 764936, kvkScoreGoal: 7139404 },
+            { id: 191052762, name: "MajesticMallard", power: 61796841, kvkKpGoal: 6179684, kvkDeathGoal: 741562, kvkScoreGoal: 6921246 },
+            { id: 200195796, name: "ᵁᶜAmadaKala", power: 61313556, kvkKpGoal: 6131356, kvkDeathGoal: 735763, kvkScoreGoal: 6867118 },
+            { id: 195430795, name: "Ham5446", power: 61303008, kvkKpGoal: 6130301, kvkDeathGoal: 735636, kvkScoreGoal: 6865937 },
+            { id: 193901926, name: "Marquis Haytham", power: 59729551, kvkKpGoal: 5972955, kvkDeathGoal: 716755, kvkScoreGoal: 6689710 },
+            { id: 192022889, name: "89Bowman", power: 59478741, kvkKpGoal: 5947874, kvkDeathGoal: 713745, kvkScoreGoal: 6661619 },
+            { id: 198113009, name: "GrunnCat Pirate", power: 59078480, kvkKpGoal: 5907848, kvkDeathGoal: 708942, kvkScoreGoal: 6616790 },
+            { id: 194366383, name: "Nyx ﾒ", power: 57594590, kvkKpGoal: 5759459, kvkDeathGoal: 691135, kvkScoreGoal: 6450594 },
+            { id: 198840570, name: "乂Bulbasaur乂", power: 57562266, kvkKpGoal: 5756227, kvkDeathGoal: 690747, kvkScoreGoal: 6446974 },
+            { id: 197539017, name: "TakmaAdNe", power: 57119126, kvkKpGoal: 5711913, kvkDeathGoal: 685430, kvkScoreGoal: 6397342 },
+            { id: 194542576, name: "Marquise Ari", power: 57052368, kvkKpGoal: 5705237, kvkDeathGoal: 684628, kvkScoreGoal: 6389865 },
+            { id: 197759615, name: "GypsyPig", power: 56504341, kvkKpGoal: 5650434, kvkDeathGoal: 678052, kvkScoreGoal: 6328486 },
+            { id: 194285018, name: "kekers", power: 54468331, kvkKpGoal: 5446833, kvkDeathGoal: 653620, kvkScoreGoal: 6100453 },
+            { id: 189893847, name: "㋡CAOS", power: 53885230, kvkKpGoal: 5388523, kvkDeathGoal: 646623, kvkScoreGoal: 6035146 },
+            { id: 188862304, name: "㋡Ban", power: 52731669, kvkKpGoal: 5273167, kvkDeathGoal: 632780, kvkScoreGoal: 5905947 },
+            // ... Add all 346 governors (truncated for space)
+        ];
+
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Populate table
+        function populateTable(data = governorData) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            data.forEach((gov, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="rank">${index + 1}</td>
+                    <td>${gov.id}</td>
+                    <td class="governor-name">${gov.name}</td>
+                    <td class="number">${formatNumber(gov.power)}</td>
+                    <td class="number">${formatNumber(gov.kvkKpGoal)}</td>
+                    <td class="number">${formatNumber(gov.kvkDeathGoal)}</td>
+                    <td class="number">${formatNumber(gov.kvkScoreGoal)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = governorData.filter(gov => 
+                gov.name.toLowerCase().includes(searchTerm) || 
+                gov.id.toString().includes(searchTerm)
+            );
+            populateTable(filtered);
+        });
+
+        // Calculate statistics
+        function calculateStats() {
+            const avgPower = Math.floor(governorData.reduce((sum, gov) => sum + gov.power, 0) / governorData.length);
+            document.getElementById('avgPower').textContent = formatNumber(avgPower);
+            document.getElementById('totalGovs').textContent = governorData.length;
+            document.getElementById('topPower').textContent = formatNumber(governorData[0].power);
+        }
+
+        // Initialize
+        populateTable();
+        calculateStats();
+    </script>
+</body>
+</html>

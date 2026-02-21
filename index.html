@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KvK4 Personal Goals - Governor Rankings</title>
+    <title>KvK4 Progress Tracker - Governor Performance</title>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: #161b22;
             border: 1px solid #30363d;
@@ -55,6 +55,7 @@
             gap: 20px;
             flex-wrap: wrap;
             align-items: center;
+            justify-content: space-between;
         }
 
         .search-box {
@@ -81,6 +82,34 @@
             outline: none;
             border-color: #1f6feb;
             box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            padding: 8px 15px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .sort-btn:hover {
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        .sort-btn.active {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: white;
         }
 
         .stats {
@@ -140,11 +169,19 @@
             font-size: 0.95em;
             border-bottom: 2px solid #30363d;
             color: #58a6ff;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        th:hover {
+            background: #161b22;
         }
 
         td {
             padding: 12px 15px;
             border-bottom: 1px solid #30363d;
+            white-space: nowrap;
         }
 
         tbody tr {
@@ -173,12 +210,41 @@
         .governor-name {
             font-weight: 500;
             color: #c9d1d9;
+            min-width: 150px;
         }
 
         .number {
             text-align: right;
             font-family: 'Courier New', monospace;
             color: #79c0ff;
+        }
+
+        .progress-bar {
+            display: inline-block;
+            width: 100px;
+            height: 20px;
+            background: #30363d;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #1f6feb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        .percent {
+            text-align: right;
+            color: #79c0ff;
+            font-weight: 600;
+            min-width: 50px;
         }
 
         .footer {
@@ -203,6 +269,17 @@
             color: #58a6ff;
         }
 
+        @media (max-width: 1024px) {
+            th, td {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+
+            .progress-bar {
+                width: 80px;
+            }
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -210,7 +287,7 @@
 
             th, td {
                 padding: 8px;
-                font-size: 0.85em;
+                font-size: 0.75em;
             }
 
             .controls {
@@ -221,12 +298,16 @@
                 min-width: 100%;
             }
 
+            .sort-controls {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
             .stats {
                 grid-template-columns: 1fr;
             }
         }
 
-        /* Scrollbar styling for GitHub wiki */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -249,19 +330,24 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚔️ KvK4 Personal Goals</h1>
-            <p>Governor Rankings & Performance Metrics</p>
+            <h1>📊 KvK4 Progress Tracker</h1>
+            <p>Governor Performance & Goal Achievement</p>
         </div>
 
         <div class="info-banner">
-            <strong>📊 Total Governors:</strong> <span id="totalGovs">346</span> | 
-            <strong>👑 Top Power:</strong> <span id="topPower">91,985,393</span> | 
-            <strong>📈 Average Power:</strong> <span id="avgPower">0</span>
+            <strong>📈 Total Governors:</strong> <span id="totalGovs">0</span> | 
+            <strong>🎯 Total Progress:</strong> <span id="totalProgress">0</span> | 
+            <strong>✅ Avg Achievement:</strong> <span id="avgAchievement">0</span>%
         </div>
 
         <div class="controls">
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 Search by Governor Name or ID...">
+            </div>
+            <div class="sort-controls">
+                <button class="sort-btn active" onclick="sortTable('achievement')">Sort by %</button>
+                <button class="sort-btn" onclick="sortTable('progress')">Sort by Progress</button>
+                <button class="sort-btn" onclick="sortTable('name')">Sort by Name</button>
             </div>
         </div>
 
@@ -270,12 +356,13 @@
                 <thead>
                     <tr>
                         <th style="width: 50px;">Rank</th>
-                        <th>Governor ID</th>
-                        <th>Governor Name</th>
-                        <th class="number">Power</th>
-                        <th class="number">KvK KP Goal</th>
-                        <th class="number">KvK Death Goal</th>
-                        <th class="number">KvK Score Goal</th>
+                        <th style="min-width: 150px;">Governor Name</th>
+                        <th class="number">Governor ID</th>
+                        <th class="number">Power Pre-KvK</th>
+                        <th class="number">KvK 4 Goal</th>
+                        <th class="number">Progress (Numbers)</th>
+                        <th style="width: 120px;">Progress Visual</th>
+                        <th class="percent">% Achieved</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -285,359 +372,146 @@
         </div>
 
         <div class="footer">
-            <p>&copy; 2026 KvK4 Rankings - Last Updated: February 11, 2026 | GitHub Wiki</p>
+            <p>&copy; 2026 KvK4 Progress Tracker - Last Updated: February 21, 2026 | GitHub Wiki</p>
         </div>
     </div>
 
     <script>
-        // Governor data
-       const governorData = [
-            { id: 190720024, name: "Sisu  〤3784", power: 91985393, kvkKpGoal: 9198539, kvkDeathGoal: 1103825, kvkScoreGoal: 10302364 },
-            { id: 199916172, name: "๖T o Y o L๖", power: 74408996, kvkKpGoal: 7440900, kvkDeathGoal: 892908, kvkScoreGoal: 8333808 },
-            { id: 197099116, name: "光LordDarkness", power: 69948725, kvkKpGoal: 6994873, kvkDeathGoal: 839385, kvkScoreGoal: 7834257 },
-            { id: 194036233, name: "影Hawkʸ影", power: 65935849, kvkKpGoal: 6593585, kvkDeathGoal: 791230, kvkScoreGoal: 7384815 },
-            { id: 193869934, name: "Agent Altec", power: 65044076, kvkKpGoal: 6504408, kvkDeathGoal: 780529, kvkScoreGoal: 7284937 },
-            { id: 193107946, name: "Krongs 永 23", power: 63744679, kvkKpGoal: 6374468, kvkDeathGoal: 764936, kvkScoreGoal: 7139404 },
-            { id: 191052762, name: "MajesticMallard", power: 61796841, kvkKpGoal: 6179684, kvkDeathGoal: 741562, kvkScoreGoal: 6921246 },
-            { id: 200195796, name: "ᵁᶜAmadaKala", power: 61313556, kvkKpGoal: 6131356, kvkDeathGoal: 735763, kvkScoreGoal: 6867118 },
-            { id: 195430795, name: "Ham5446", power: 61303008, kvkKpGoal: 6130301, kvkDeathGoal: 735636, kvkScoreGoal: 6865937 },
-            { id: 193901926, name: "Marquis Haytham", power: 59729551, kvkKpGoal: 5972955, kvkDeathGoal: 716755, kvkScoreGoal: 6689710 },
-            { id: 192022889, name: "89Bowman", power: 59478741, kvkKpGoal: 5947874, kvkDeathGoal: 713745, kvkScoreGoal: 6661619 },
-            { id: 198113009, name: "GrunnCat Pirate", power: 59078480, kvkKpGoal: 5907848, kvkDeathGoal: 708942, kvkScoreGoal: 6616790 },
-            { id: 194366383, name: "Nyx ﾒ", power: 57594590, kvkKpGoal: 5759459, kvkDeathGoal: 691135, kvkScoreGoal: 6450594 },
-            { id: 198840570, name: "乂Bulbasaur乂", power: 57562266, kvkKpGoal: 5756227, kvkDeathGoal: 690747, kvkScoreGoal: 6446974 },
-            { id: 197539017, name: "TakmaAdNe", power: 57119126, kvkKpGoal: 5711913, kvkDeathGoal: 685430, kvkScoreGoal: 6397342 },
-            { id: 194542576, name: "Marquise Ari", power: 57052368, kvkKpGoal: 5705237, kvkDeathGoal: 684628, kvkScoreGoal: 6389865 },
-            { id: 197759615, name: "GypsyPig", power: 56504341, kvkKpGoal: 5650434, kvkDeathGoal: 678052, kvkScoreGoal: 6328486 },
-            { id: 194285018, name: "kekers", power: 54468331, kvkKpGoal: 5446833, kvkDeathGoal: 653620, kvkScoreGoal: 6100453 },
-            { id: 189893847, name: "㋡CAOS", power: 53885230, kvkKpGoal: 5388523, kvkDeathGoal: 646623, kvkScoreGoal: 6035146 },
-            { id: 188862304, name: "㋡Ban", power: 52731669, kvkKpGoal: 5273167, kvkDeathGoal: 632780, kvkScoreGoal: 5905947 },
-            { id: 191898448, name: "ˢᴶメGodUsopp", power: 52503950, kvkKpGoal: 5250395, kvkDeathGoal: 630047, kvkScoreGoal: 5880442 },
-            { id: 199674057, name: "Chiu chiu", power: 51755886, kvkKpGoal: 5175589, kvkDeathGoal: 621071, kvkScoreGoal: 5796659 },
-            { id: 189348380, name: "㋡CaíqueDiniz", power: 51541406, kvkKpGoal: 5154141, kvkDeathGoal: 618497, kvkScoreGoal: 5772637 },
-            { id: 197896909, name: "ᴬˢʰLiubei09", power: 50934681, kvkKpGoal: 5093468, kvkDeathGoal: 611216, kvkScoreGoal: 5704684 },
-            { id: 193108623, name: "Wartisan", power: 49950332, kvkKpGoal: 4995033, kvkDeathGoal: 599404, kvkScoreGoal: 5594437 },
-            { id: 191383950, name: "ᴷᴵᴺᴳAL", power: 48698002, kvkKpGoal: 4869800, kvkDeathGoal: 584376, kvkScoreGoal: 5454176 },
-            { id: 193869218, name: "MinaNoShit", power: 48668837, kvkKpGoal: 4866884, kvkDeathGoal: 584026, kvkScoreGoal: 5450910 },
-            { id: 200058638, name: "ᵁᶜCeruus", power: 47574356, kvkKpGoal: 4757436, kvkDeathGoal: 570892, kvkScoreGoal: 5328328 },
-            { id: 192231775, name: "ᴷᴵᴺᴳAR", power: 46049586, kvkKpGoal: 4604959, kvkDeathGoal: 552595, kvkScoreGoal: 5157554 },
-            { id: 197689104, name: "Joe Dalt", power: 45994086, kvkKpGoal: 4599409, kvkDeathGoal: 551929, kvkScoreGoal: 5151338 },
-            { id: 197746250, name: "D o l o Rᵀᴹ", power: 45741412, kvkKpGoal: 4574141, kvkDeathGoal: 548897, kvkScoreGoal: 5123038 },
-            { id: 198191316, name: "Phoєnixツ", power: 45489876, kvkKpGoal: 4548988, kvkDeathGoal: 545879, kvkScoreGoal: 5094866 },
-            { id: 197690471, name: "Bob Dalt ツ", power: 45422020, kvkKpGoal: 4542202, kvkDeathGoal: 545064, kvkScoreGoal: 5087266 },
-            { id: 200442527, name: "Cedee", power: 45291561, kvkKpGoal: 4529156, kvkDeathGoal: 543499, kvkScoreGoal: 5072655 },
-            { id: 198290981, name: "Lord KT EE", power: 45236905, kvkKpGoal: 4523691, kvkDeathGoal: 542843, kvkScoreGoal: 5066533 },
-            { id: 188859389, name: "STEPHEN2026", power: 45102097, kvkKpGoal: 4510210, kvkDeathGoal: 541225, kvkScoreGoal: 5051435 },
-            { id: 199969448, name: "ᵁᶜMakroni", power: 44935352, kvkKpGoal: 4493535, kvkDeathGoal: 539224, kvkScoreGoal: 5032759 },
-            { id: 195173741, name: "Hoplitea", power: 44890244, kvkKpGoal: 4489024, kvkDeathGoal: 538683, kvkScoreGoal: 5027707 },
-            { id: 197818671, name: "ᵁᶜB O R O S", power: 44677814, kvkKpGoal: 4467781, kvkDeathGoal: 536134, kvkScoreGoal: 5003915 },
-            { id: 197394599, name: "안헬 AngeI", power: 43886534, kvkKpGoal: 4388653, kvkDeathGoal: 526638, kvkScoreGoal: 4915292 },
-            { id: 200437993, name: "Reptiles", power: 43746023, kvkKpGoal: 4374602, kvkDeathGoal: 524952, kvkScoreGoal: 4899555 },
-            { id: 199537516, name: "MaxTzy", power: 43704785, kvkKpGoal: 4370479, kvkDeathGoal: 524457, kvkScoreGoal: 4894936 },
-            { id: 197818598, name: "ᵁᶜMATY", power: 43665738, kvkKpGoal: 4366574, kvkDeathGoal: 523989, kvkScoreGoal: 4890563 },
-            { id: 192327803, name: "MĪKȺZȺヤ", power: 43545002, kvkKpGoal: 4354500, kvkDeathGoal: 522540, kvkScoreGoal: 4877040 },
-            { id: 199706315, name: "ᵁᶜFreya", power: 43495245, kvkKpGoal: 4349525, kvkDeathGoal: 521943, kvkScoreGoal: 4871467 },
-            { id: 199983566, name: "MevriK", power: 43466157, kvkKpGoal: 4346616, kvkDeathGoal: 521594, kvkScoreGoal: 4868210 },
-            { id: 197454059, name: "ᶳᶺAkAzA", power: 43220146, kvkKpGoal: 4322015, kvkDeathGoal: 518642, kvkScoreGoal: 4840656 },
-            { id: 197585242, name: "ᵁᶜCatt", power: 43207977, kvkKpGoal: 4320798, kvkDeathGoal: 518496, kvkScoreGoal: 4839293 },
-            { id: 198191140, name: "Hïrōki", power: 42463707, kvkKpGoal: 4246371, kvkDeathGoal: 509564, kvkScoreGoal: 4755935 },
-            { id: 188715377, name: "Pɑm", power: 42317541, kvkKpGoal: 4231754, kvkDeathGoal: 507810, kvkScoreGoal: 4739565 },
-            { id: 200042887, name: "ᵁᶜSendFlux", power: 42259117, kvkKpGoal: 4225912, kvkDeathGoal: 507109, kvkScoreGoal: 4733021 },
-            { id: 192297064, name: "ᵘᵒGismor", power: 42176213, kvkKpGoal: 4217621, kvkDeathGoal: 506115, kvkScoreGoal: 4723736 },
-            { id: 197746436, name: "DogusPrime", power: 42146558, kvkKpGoal: 4214656, kvkDeathGoal: 505759, kvkScoreGoal: 4720414 },
-            { id: 201165815, name: "ᴵᴮWillow", power: 41919698, kvkKpGoal: 4191970, kvkDeathGoal: 503036, kvkScoreGoal: 4695006 },
-            { id: 201544400, name: "ᴵᴮDark", power: 41835755, kvkKpGoal: 4183576, kvkDeathGoal: 502029, kvkScoreGoal: 4685605 },
-            { id: 194900251, name: "LowkeyUK", power: 41652456, kvkKpGoal: 4165246, kvkDeathGoal: 499829, kvkScoreGoal: 4665075 },
-            { id: 197690670, name: "Jack Dalt ツ", power: 40938000, kvkKpGoal: 4093800, kvkDeathGoal: 491256, kvkScoreGoal: 4585056 },
-            { id: 197821617, name: "ᴬᴷJaguar", power: 40885049, kvkKpGoal: 4088505, kvkDeathGoal: 490621, kvkScoreGoal: 4579125 },
-            { id: 199490489, name: "Орех63", power: 40737868, kvkKpGoal: 4073787, kvkDeathGoal: 488854, kvkScoreGoal: 4562641 },
-            { id: 196872574, name: "WOLF ARMY 01", power: 40596795, kvkKpGoal: 4059680, kvkDeathGoal: 487162, kvkScoreGoal: 4546841 },
-            { id: 197067966, name: "Mini StarBurst", power: 40510784, kvkKpGoal: 4051078, kvkDeathGoal: 486129, kvkScoreGoal: 4537208 },
-            { id: 191682058, name: "ARTHUR MORGAП", power: 40438576, kvkKpGoal: 4043858, kvkDeathGoal: 485263, kvkScoreGoal: 4529121 },
-            { id: 200210088, name: "彡Swiftz彡", power: 39622625, kvkKpGoal: 3962263, kvkDeathGoal: 475472, kvkScoreGoal: 4437734 },
-            { id: 197464861, name: "ᶦˣHuy Vo", power: 39124931, kvkKpGoal: 3912493, kvkDeathGoal: 469499, kvkScoreGoal: 4381992 },
-            { id: 198604700, name: "ᴮᵃIMAGIN", power: 38780506, kvkKpGoal: 3878051, kvkDeathGoal: 465366, kvkScoreGoal: 4343417 },
-            { id: 179626728, name: "ᴴᴷ luffy 24", power: 38737504, kvkKpGoal: 3873750, kvkDeathGoal: 464850, kvkScoreGoal: 4338600 },
-            { id: 194793286, name: "Knightshade BLK", power: 38358635, kvkKpGoal: 3835864, kvkDeathGoal: 460304, kvkScoreGoal: 4296167 },
-            { id: 167008257, name: "ᴮᵒᵗ6ICU", power: 38346351, kvkKpGoal: 3834635, kvkDeathGoal: 460156, kvkScoreGoal: 4294791 },
-            { id: 197649447, name: "Tawycb", power: 38312495, kvkKpGoal: 3831250, kvkDeathGoal: 459750, kvkScoreGoal: 4290999 },
-            { id: 197251352, name: "DalejandroVz", power: 38190223, kvkKpGoal: 3819022, kvkDeathGoal: 458283, kvkScoreGoal: 4277305 },
-            { id: 197791854, name: "ZiKo  Dalt ツ", power: 37993609, kvkKpGoal: 3799361, kvkDeathGoal: 455923, kvkScoreGoal: 4255284 },
-            { id: 198836918, name: "乂Porygon乂", power: 37936892, kvkKpGoal: 3793689, kvkDeathGoal: 455243, kvkScoreGoal: 4248932 },
-            { id: 199838699, name: "ᴵˣHomy42", power: 37551043, kvkKpGoal: 3755104, kvkDeathGoal: 450613, kvkScoreGoal: 4205717 },
-            { id: 197497663, name: "ken4an931", power: 37530462, kvkKpGoal: 3753046, kvkDeathGoal: 450366, kvkScoreGoal: 4203412 },
-            { id: 200146230, name: "ᴬᴷMarti", power: 37192178, kvkKpGoal: 3719218, kvkDeathGoal: 446306, kvkScoreGoal: 4165524 },
-            { id: 194502563, name: "Prillie X Laz", power: 36875016, kvkKpGoal: 3687502, kvkDeathGoal: 442500, kvkScoreGoal: 4130002 },
-            { id: 197486190, name: "ˢexyWindy", power: 36846942, kvkKpGoal: 3684694, kvkDeathGoal: 442163, kvkScoreGoal: 4126858 },
-            { id: 199823222, name: "ĿampangCat", power: 36741203, kvkKpGoal: 3674120, kvkDeathGoal: 440894, kvkScoreGoal: 4115015 },
-            { id: 197380701, name: "DeBowen", power: 36426122, kvkKpGoal: 3642612, kvkDeathGoal: 437113, kvkScoreGoal: 4079726 },
-            { id: 198650769, name: "ᶜˢSpinster", power: 36411810, kvkKpGoal: 3641181, kvkDeathGoal: 436942, kvkScoreGoal: 4078123 },
-            { id: 200076695, name: "๖ۣۜLøøtBøy", power: 36368069, kvkKpGoal: 3636807, kvkDeathGoal: 436417, kvkScoreGoal: 4073224 },
-            { id: 197820892, name: "ᴳᴹPotro", power: 36071014, kvkKpGoal: 3607101, kvkDeathGoal: 432852, kvkScoreGoal: 4039954 },
-            { id: 200138164, name: "ᵁᶜDestruds", power: 35851310, kvkKpGoal: 3585131, kvkDeathGoal: 430216, kvkScoreGoal: 4015347 },
-            { id: 200460536, name: "Pavel68", power: 35560389, kvkKpGoal: 3556039, kvkDeathGoal: 426725, kvkScoreGoal: 3982764 },
-            { id: 198881865, name: "Móc Ra Nước", power: 35408192, kvkKpGoal: 3540819, kvkDeathGoal: 424898, kvkScoreGoal: 3965718 },
-            { id: 199176389, name: "Móc Nát Bét", power: 35239225, kvkKpGoal: 3523923, kvkDeathGoal: 422871, kvkScoreGoal: 3946793 },
-            { id: 198142436, name: "ᴰᴰAnar", power: 35170335, kvkKpGoal: 3517034, kvkDeathGoal: 422044, kvkScoreGoal: 3939078 },
-            { id: 198070529, name: "Ash Daltツ", power: 35056734, kvkKpGoal: 3505673, kvkDeathGoal: 420681, kvkScoreGoal: 3926354 },
-            { id: 197746890, name: "StarBurst", power: 35019029, kvkKpGoal: 3501903, kvkDeathGoal: 420228, kvkScoreGoal: 3922131 },
-            { id: 200060064, name: "vBraa2", power: 34801694, kvkKpGoal: 3480169, kvkDeathGoal: 417620, kvkScoreGoal: 3897790 },
-            { id: 196635767, name: "TShelby ʰᶜ", power: 34689358, kvkKpGoal: 3468936, kvkDeathGoal: 416272, kvkScoreGoal: 3885208 },
-            { id: 200430622, name: "JesseAR", power: 34687025, kvkKpGoal: 3468703, kvkDeathGoal: 416244, kvkScoreGoal: 3884947 },
-            { id: 192058861, name: "MIBOY", power: 34638615, kvkKpGoal: 3463862, kvkDeathGoal: 415663, kvkScoreGoal: 3879525 },
-            { id: 197524254, name: "Lady Sheyma", power: 34528893, kvkKpGoal: 3452889, kvkDeathGoal: 414347, kvkScoreGoal: 3867236 },
-            { id: 193739590, name: "ᵂᴬwzz7a", power: 34475077, kvkKpGoal: 3447508, kvkDeathGoal: 413701, kvkScoreGoal: 3861209 },
-            { id: 194925918, name: "AĽí", power: 34405005, kvkKpGoal: 3440501, kvkDeathGoal: 412860, kvkScoreGoal: 3853361 },
-            { id: 198167010, name: "ᵀᴮElectrek", power: 34250227, kvkKpGoal: 3425023, kvkDeathGoal: 411003, kvkScoreGoal: 3836025 },
-            { id: 197702319, name: "Mue Dalt ツ", power: 33943296, kvkKpGoal: 3394330, kvkDeathGoal: 407320, kvkScoreGoal: 3801649 },
-            { id: 192677527, name: "HimSon1000", power: 33849447, kvkKpGoal: 3384945, kvkDeathGoal: 406193, kvkScoreGoal: 3791138 },
-            { id: 200446815, name: "Chibrank", power: 33631681, kvkKpGoal: 3363168, kvkDeathGoal: 403580, kvkScoreGoal: 3766748 },
-            { id: 200445642, name: "Freakpower", power: 33624182, kvkKpGoal: 3362418, kvkDeathGoal: 403490, kvkScoreGoal: 3765908 },
-            { id: 199983567, name: "Mevrik farm 2", power: 33579329, kvkKpGoal: 3357933, kvkDeathGoal: 402952, kvkScoreGoal: 3760885 },
-            { id: 200442692, name: "Aiipp", power: 33458047, kvkKpGoal: 3345805, kvkDeathGoal: 401497, kvkScoreGoal: 3747301 },
-            { id: 195765863, name: "ᵁᶜㄴŁuukメㄱ", power: 33436772, kvkKpGoal: 3343677, kvkDeathGoal: 401241, kvkScoreGoal: 3744918 },
-            { id: 198653194, name: "ᴿᴸChauBacHo", power: 32887693, kvkKpGoal: 3288769, kvkDeathGoal: 394652, kvkScoreGoal: 3683422 },
-            { id: 197337363, name: "I쌈바칸동I", power: 32884592, kvkKpGoal: 3288459, kvkDeathGoal: 394615, kvkScoreGoal: 3683074 },
-            { id: 197747185, name: "ﾔ 爪øuśe ﾔ", power: 32861562, kvkKpGoal: 3286156, kvkDeathGoal: 394339, kvkScoreGoal: 3680495 },
-            { id: 196532046, name: "rryl", power: 32675207, kvkKpGoal: 3267521, kvkDeathGoal: 392102, kvkScoreGoal: 3659623 },
-            { id: 197490219, name: "Vic735", power: 32603140, kvkKpGoal: 3260314, kvkDeathGoal: 391238, kvkScoreGoal: 3651552 },
-            { id: 200471801, name: "Salad1nRes", power: 32533977, kvkKpGoal: 3253398, kvkDeathGoal: 390408, kvkScoreGoal: 3643805 },
-            { id: 199918872, name: "P o C o N g", power: 32259607, kvkKpGoal: 3225961, kvkDeathGoal: 387115, kvkScoreGoal: 3613076 },
-            { id: 199308899, name: "ARGYN KZ", power: 31958014, kvkKpGoal: 3195801, kvkDeathGoal: 383496, kvkScoreGoal: 3579298 },
-            { id: 200244892, name: "Arvosko", power: 31954664, kvkKpGoal: 3195466, kvkDeathGoal: 383456, kvkScoreGoal: 3578922 },
-            { id: 200459156, name: "Aletheon", power: 31800866, kvkKpGoal: 3180087, kvkDeathGoal: 381610, kvkScoreGoal: 3561697 },
-            { id: 199449467, name: "TheWitcher1", power: 31687807, kvkKpGoal: 3168781, kvkDeathGoal: 380254, kvkScoreGoal: 3549034 },
-            { id: 199970598, name: "ᵁᶜ Nico113", power: 31547866, kvkKpGoal: 3154787, kvkDeathGoal: 378574, kvkScoreGoal: 3533361 },
-            { id: 198160514, name: "Edelweiss ツ", power: 31506180, kvkKpGoal: 3150618, kvkDeathGoal: 378074, kvkScoreGoal: 3528692 },
-            { id: 197729532, name: "Fat Man One", power: 31372036, kvkKpGoal: 3137204, kvkDeathGoal: 376464, kvkScoreGoal: 3513668 },
-            { id: 200437145, name: "Enemy hunter", power: 31318716, kvkKpGoal: 3131872, kvkDeathGoal: 375825, kvkScoreGoal: 3507696 },
-            { id: 199359736, name: "Mỳ Xào Giòn", power: 31169502, kvkKpGoal: 3116950, kvkDeathGoal: 374034, kvkScoreGoal: 3490984 },
-            { id: 194793930, name: "ÉL GUAPO", power: 30874565, kvkKpGoal: 3087457, kvkDeathGoal: 370495, kvkScoreGoal: 3457951 },
-            { id: 200477335, name: "Jeเเyfish", power: 30815811, kvkKpGoal: 3081581, kvkDeathGoal: 369790, kvkScoreGoal: 3451371 },
-            { id: 191426042, name: "骸 Lilia", power: 30670598, kvkKpGoal: 3067060, kvkDeathGoal: 368047, kvkScoreGoal: 3435107 },
-            { id: 200479596, name: "INSHIRO", power: 30345403, kvkKpGoal: 3034540, kvkDeathGoal: 364145, kvkScoreGoal: 3398685 },
-            { id: 200478458, name: "Nobita2005", power: 30194064, kvkKpGoal: 3019406, kvkDeathGoal: 362329, kvkScoreGoal: 3381735 },
-            { id: 197829331, name: "zenzki", power: 30102106, kvkKpGoal: 3010211, kvkDeathGoal: 361225, kvkScoreGoal: 3371436 },
-            { id: 194310007, name: "ᴿᴮStas345", power: 30084063, kvkKpGoal: 3008406, kvkDeathGoal: 361009, kvkScoreGoal: 3369415 },
-            { id: 193620755, name: "CKilly", power: 29978233, kvkKpGoal: 2997823, kvkDeathGoal: 359739, kvkScoreGoal: 3357562 },
-            { id: 200451234, name: "Parizzzzzzz", power: 29849549, kvkKpGoal: 2984955, kvkDeathGoal: 358195, kvkScoreGoal: 3343149 },
-            { id: 167511074, name: "Persian Wolf", power: 29546407, kvkKpGoal: 2954641, kvkDeathGoal: 354557, kvkScoreGoal: 3309198 },
-            { id: 199969795, name: "ᵁᶜSnipe", power: 29523185, kvkKpGoal: 2952319, kvkDeathGoal: 354278, kvkScoreGoal: 3306597 },
-            { id: 197824892, name: "Mr Unaa", power: 29470963, kvkKpGoal: 2947096, kvkDeathGoal: 353652, kvkScoreGoal: 3300748 },
-            { id: 194503027, name: "XMAS82", power: 29445703, kvkKpGoal: 2944570, kvkDeathGoal: 353348, kvkScoreGoal: 3297919 },
-            { id: 195342557, name: "ˢᶦᶰﾒJuicy", power: 29390976, kvkKpGoal: 2939098, kvkDeathGoal: 352692, kvkScoreGoal: 3291789 },
-            { id: 201837309, name: "Azeon", power: 29236930, kvkKpGoal: 2923693, kvkDeathGoal: 350843, kvkScoreGoal: 3274536 },
-            { id: 200430148, name: "MarShadowGaming", power: 29176251, kvkKpGoal: 2917625, kvkDeathGoal: 350115, kvkScoreGoal: 3267740 },
-            { id: 195342924, name: "ˢᶦᶰﾒSweety", power: 29074676, kvkKpGoal: 2907468, kvkDeathGoal: 348896, kvkScoreGoal: 3256364 },
-            { id: 199832868, name: "Aku Huda", power: 29057311, kvkKpGoal: 2905731, kvkDeathGoal: 348688, kvkScoreGoal: 3254419 },
-            { id: 192102200, name: "ᶠᵖ Hunter", power: 29012217, kvkKpGoal: 2901222, kvkDeathGoal: 348147, kvkScoreGoal: 3249368 },
-            { id: 193610776, name: "Dhuran", power: 28937602, kvkKpGoal: 2893760, kvkDeathGoal: 347251, kvkScoreGoal: 3241011 },
-            { id: 200427274, name: "Vlady1992", power: 28904777, kvkKpGoal: 2890478, kvkDeathGoal: 346857, kvkScoreGoal: 3237335 },
-            { id: 200435619, name: "ᵁᶜ 93Matis", power: 28857926, kvkKpGoal: 2885793, kvkDeathGoal: 346295, kvkScoreGoal: 3232088 },
-            { id: 200456037, name: "HungBullet", power: 28810740, kvkKpGoal: 2881074, kvkDeathGoal: 345729, kvkScoreGoal: 3226803 },
-            { id: 200470732, name: "Omar Elsawhly", power: 28787853, kvkKpGoal: 2878785, kvkDeathGoal: 345454, kvkScoreGoal: 3224240 },
-            { id: 200439772, name: "ᵁᶜCendres", power: 28762863, kvkKpGoal: 2876286, kvkDeathGoal: 345154, kvkScoreGoal: 3221441 },
-            { id: 198871678, name: "BabyTribie", power: 28540667, kvkKpGoal: 2854067, kvkDeathGoal: 342488, kvkScoreGoal: 3196555 },
-            { id: 197907008, name: "PoKie", power: 28418741, kvkKpGoal: 2841874, kvkDeathGoal: 341025, kvkScoreGoal: 3182899 },
-            { id: 200354113, name: "メSadeng", power: 28381882, kvkKpGoal: 2838188, kvkDeathGoal: 340583, kvkScoreGoal: 3178771 },
-            { id: 200037098, name: "ᵁᶜGenesis", power: 28370148, kvkKpGoal: 2837015, kvkDeathGoal: 340442, kvkScoreGoal: 3177457 },
-            { id: 199922869, name: "ᵁᶜMetler", power: 28209615, kvkKpGoal: 2820962, kvkDeathGoal: 338515, kvkScoreGoal: 3159477 },
-            { id: 199125057, name: "Excalot4880", power: 28174663, kvkKpGoal: 2817466, kvkDeathGoal: 338096, kvkScoreGoal: 3155562 },
-            { id: 197291246, name: "ᴬᴷDani", power: 27880416, kvkKpGoal: 2788042, kvkDeathGoal: 334565, kvkScoreGoal: 3122607 },
-            { id: 199340027, name: "ˢᵃ 關羽", power: 27790270, kvkKpGoal: 2779027, kvkDeathGoal: 333483, kvkScoreGoal: 3112510 },
-            { id: 200011247, name: "Maks310892", power: 27764035, kvkKpGoal: 2776404, kvkDeathGoal: 333168, kvkScoreGoal: 3109572 },
-            { id: 200196523, name: "Qᴜɪᴇᴛ", power: 27508210, kvkKpGoal: 2750821, kvkDeathGoal: 330099, kvkScoreGoal: 3080920 },
-            { id: 198065917, name: "Szary Prorok", power: 27166549, kvkKpGoal: 2716655, kvkDeathGoal: 325999, kvkScoreGoal: 3042653 },
-            { id: 198017707, name: "Run Dalt ツ", power: 27063300, kvkKpGoal: 2706330, kvkDeathGoal: 324760, kvkScoreGoal: 3031090 },
-            { id: 199668849, name: "ᶠᵏSimek", power: 27006803, kvkKpGoal: 2700680, kvkDeathGoal: 324082, kvkScoreGoal: 3024762 },
-            { id: 197818595, name: "jaguarfarm", power: 26664690, kvkKpGoal: 2666469, kvkDeathGoal: 319976, kvkScoreGoal: 2986445 },
-            { id: 193160416, name: "Yaskoh", power: 26630618, kvkKpGoal: 2663062, kvkDeathGoal: 319567, kvkScoreGoal: 2982629 },
-            { id: 198641164, name: "Rinnn", power: 26562967, kvkKpGoal: 2656297, kvkDeathGoal: 318756, kvkScoreGoal: 2975052 },
-            { id: 200463121, name: "Trzmielu", power: 26528077, kvkKpGoal: 2652808, kvkDeathGoal: 318337, kvkScoreGoal: 2971145 },
-            { id: 190008440, name: "Cajdonni", power: 26366163, kvkKpGoal: 2636616, kvkDeathGoal: 316394, kvkScoreGoal: 2953010 },
-            { id: 200462811, name: "demon desteuc", power: 26224934, kvkKpGoal: 2622493, kvkDeathGoal: 314699, kvkScoreGoal: 2937193 },
-            { id: 200177851, name: "ᵁᶜ T Ü R K", power: 26104531, kvkKpGoal: 2610453, kvkDeathGoal: 313254, kvkScoreGoal: 2923707 },
-            { id: 199313359, name: "ᴿᴾSTiCK QZ", power: 26066862, kvkKpGoal: 2606686, kvkDeathGoal: 312802, kvkScoreGoal: 2919489 },
-            { id: 199917958, name: "Sunduvan", power: 26028826, kvkKpGoal: 2602883, kvkDeathGoal: 312346, kvkScoreGoal: 2915229 },
-            { id: 200475820, name: "BEER SÀIGÒN", power: 25954195, kvkKpGoal: 2595420, kvkDeathGoal: 311450, kvkScoreGoal: 2906870 },
-            { id: 200405758, name: "3806 KVK4 MIGRA", power: 25755151, kvkKpGoal: 2575515, kvkDeathGoal: 309062, kvkScoreGoal: 2884577 },
-            { id: 200482869, name: "who are you", power: 25643928, kvkKpGoal: 2564393, kvkDeathGoal: 307727, kvkScoreGoal: 2872120 },
-            { id: 198065825, name: "ᴳˢMelih Dalt", power: 25617454, kvkKpGoal: 2561745, kvkDeathGoal: 307409, kvkScoreGoal: 2869155 },
-            { id: 200181190, name: "CatEnjoyer", power: 25508640, kvkKpGoal: 2550864, kvkDeathGoal: 306104, kvkScoreGoal: 2856968 },
-            { id: 200015295, name: "YouDaRealArt", power: 25345421, kvkKpGoal: 2534542, kvkDeathGoal: 304145, kvkScoreGoal: 2838687 },
-            { id: 200458125, name: "Novinnn", power: 25328929, kvkKpGoal: 2532893, kvkDeathGoal: 303947, kvkScoreGoal: 2836840 },
-            { id: 199810959, name: "ʀɢ Saboter", power: 25143156, kvkKpGoal: 2514316, kvkDeathGoal: 301718, kvkScoreGoal: 2816033 },
-            { id: 198158725, name: "Warspoils", power: 25094793, kvkKpGoal: 2509479, kvkDeathGoal: 301138, kvkScoreGoal: 2810617 },
-            { id: 200468071, name: "ᵁᶜ X conq X", power: 25066675, kvkKpGoal: 2506668, kvkDeathGoal: 300800, kvkScoreGoal: 2807468 },
-            { id: 189765057, name: "Virusz", power: 24990074, kvkKpGoal: 2499007, kvkDeathGoal: 299881, kvkScoreGoal: 2798888 },
-            { id: 200489883, name: "Graxjus", power: 24979279, kvkKpGoal: 2497928, kvkDeathGoal: 299751, kvkScoreGoal: 2797679 },
-            { id: 199225498, name: "ᴿᴳKdog", power: 24919816, kvkKpGoal: 2491982, kvkDeathGoal: 299038, kvkScoreGoal: 2791019 },
-            { id: 200048422, name: "Well Farm 6", power: 24905071, kvkKpGoal: 2490507, kvkDeathGoal: 298861, kvkScoreGoal: 2789368 },
-            { id: 200475536, name: "The ToddFather", power: 24846125, kvkKpGoal: 2484613, kvkDeathGoal: 298154, kvkScoreGoal: 2782766 },
-            { id: 191671356, name: "Love all", power: 24841319, kvkKpGoal: 2484132, kvkDeathGoal: 298096, kvkScoreGoal: 2782228 },
-            { id: 200450118, name: "Kiryusha455", power: 24758996, kvkKpGoal: 2475900, kvkDeathGoal: 297108, kvkScoreGoal: 2773008 },
-            { id: 196966564, name: "Punchdaclown", power: 24710914, kvkKpGoal: 2471091, kvkDeathGoal: 296531, kvkScoreGoal: 2767622 },
-            { id: 200439594, name: "NMT CR7", power: 24692544, kvkKpGoal: 2469254, kvkDeathGoal: 296311, kvkScoreGoal: 2765565 },
-            { id: 200425853, name: "Damasko", power: 24649330, kvkKpGoal: 2464933, kvkDeathGoal: 295792, kvkScoreGoal: 2760725 },
-            { id: 201511346, name: "Sniper42", power: 24520279, kvkKpGoal: 2452028, kvkDeathGoal: 294243, kvkScoreGoal: 2746271 },
-            { id: 200146952, name: "ᴵᴱLuna gh", power: 24470435, kvkKpGoal: 2447044, kvkDeathGoal: 293645, kvkScoreGoal: 2740689 },
-            { id: 200454343, name: "Glitch guy", power: 24318067, kvkKpGoal: 2431807, kvkDeathGoal: 291817, kvkScoreGoal: 2723624 },
-            { id: 200453557, name: "Artemka2811", power: 24214589, kvkKpGoal: 2421459, kvkDeathGoal: 290575, kvkScoreGoal: 2712034 },
-            { id: 197503854, name: "Tommy pew pew", power: 24065210, kvkKpGoal: 2406521, kvkDeathGoal: 288783, kvkScoreGoal: 2695304 },
-            { id: 198606659, name: "ZiziTOP", power: 23944767, kvkKpGoal: 2394477, kvkDeathGoal: 287337, kvkScoreGoal: 2681814 },
-            { id: 200489021, name: "bốđây4953", power: 23941841, kvkKpGoal: 2394184, kvkDeathGoal: 287302, kvkScoreGoal: 2681486 },
-            { id: 198409221, name: "亗メShinYuxメ亗", power: 23910362, kvkKpGoal: 2391036, kvkDeathGoal: 286924, kvkScoreGoal: 2677961 },
-            { id: 200448075, name: "chimkuxoan", power: 23764452, kvkKpGoal: 2376445, kvkDeathGoal: 285173, kvkScoreGoal: 2661619 },
-            { id: 199625232, name: "Mystique88", power: 23724119, kvkKpGoal: 2372412, kvkDeathGoal: 284689, kvkScoreGoal: 2657101 },
-            { id: 197308475, name: "DalejandroAp", power: 23597854, kvkKpGoal: 2359785, kvkDeathGoal: 283174, kvkScoreGoal: 2642960 },
-            { id: 200442347, name: "mocuk şehri", power: 23483373, kvkKpGoal: 2348337, kvkDeathGoal: 281800, kvkScoreGoal: 2630138 },
-            { id: 201039770, name: "elbowsup", power: 23387247, kvkKpGoal: 2338725, kvkDeathGoal: 280647, kvkScoreGoal: 2619372 },
-            { id: 198422131, name: "ᴰ㋡semaj", power: 23289544, kvkKpGoal: 2328954, kvkDeathGoal: 279475, kvkScoreGoal: 2608429 },
-            { id: 200080963, name: "ᵁᶜSix", power: 23248124, kvkKpGoal: 2324812, kvkDeathGoal: 278977, kvkScoreGoal: 2603790 },
-            { id: 200418345, name: "ᵁᶜLЄO҉", power: 23159251, kvkKpGoal: 2315925, kvkDeathGoal: 277911, kvkScoreGoal: 2593836 },
-            { id: 197853271, name: "Tuborgis", power: 23139844, kvkKpGoal: 2313984, kvkDeathGoal: 277678, kvkScoreGoal: 2591663 },
-            { id: 200965847, name: "MrMít", power: 23098822, kvkKpGoal: 2309882, kvkDeathGoal: 277186, kvkScoreGoal: 2587068 },
-            { id: 200441508, name: "Turgay16", power: 23093638, kvkKpGoal: 2309364, kvkDeathGoal: 277124, kvkScoreGoal: 2586487 },
-            { id: 200488613, name: "Flying Fool", power: 23068460, kvkKpGoal: 2306846, kvkDeathGoal: 276822, kvkScoreGoal: 2583668 },
-            { id: 200491478, name: "SmallPea", power: 22947527, kvkKpGoal: 2294753, kvkDeathGoal: 275370, kvkScoreGoal: 2570123 },
-            { id: 198155927, name: "ʳᵃʸMansur", power: 22855446, kvkKpGoal: 2285545, kvkDeathGoal: 274265, kvkScoreGoal: 2559810 },
-            { id: 200484216, name: "Hikko1", power: 22673443, kvkKpGoal: 2267344, kvkDeathGoal: 272081, kvkScoreGoal: 2539426 },
-            { id: 201655100, name: "MASTER 70", power: 22628098, kvkKpGoal: 2262810, kvkDeathGoal: 271537, kvkScoreGoal: 2534347 },
-            { id: 200452740, name: "Karpovv", power: 22049822, kvkKpGoal: 2204982, kvkDeathGoal: 264598, kvkScoreGoal: 2469580 },
-            { id: 197783393, name: "ken4an931Farm", power: 21936606, kvkKpGoal: 2193661, kvkDeathGoal: 263239, kvkScoreGoal: 2456900 },
-            { id: 200423363, name: "Apps78", power: 21909697, kvkKpGoal: 2190970, kvkDeathGoal: 262916, kvkScoreGoal: 2453886 },
-            { id: 198692471, name: "ᴵᴹKhầy", power: 21671107, kvkKpGoal: 2167111, kvkDeathGoal: 260053, kvkScoreGoal: 2427164 },
-            { id: 200419838, name: "Nicastrese", power: 21570804, kvkKpGoal: 2157080, kvkDeathGoal: 258850, kvkScoreGoal: 2415930 },
-            { id: 174979687, name: "Dew the Wicked", power: 21513535, kvkKpGoal: 2151354, kvkDeathGoal: 258162, kvkScoreGoal: 2409516 },
-            { id: 200286002, name: "Shoee", power: 21507436, kvkKpGoal: 2150744, kvkDeathGoal: 258089, kvkScoreGoal: 2408833 },
-            { id: 200481844, name: "Oklaku", power: 21242469, kvkKpGoal: 2124247, kvkDeathGoal: 254910, kvkScoreGoal: 2379157 },
-            { id: 198244275, name: "ErtuğruLGazi", power: 21239962, kvkKpGoal: 2123996, kvkDeathGoal: 254880, kvkScoreGoal: 2378876 },
-            { id: 200446928, name: "Pistachios", power: 21198862, kvkKpGoal: 2119886, kvkDeathGoal: 254386, kvkScoreGoal: 2374273 },
-            { id: 200466193, name: "ªlbªn", power: 21197981, kvkKpGoal: 2119798, kvkDeathGoal: 254376, kvkScoreGoal: 2374174 },
-            { id: 200325295, name: "KiragawaKazuto", power: 21050524, kvkKpGoal: 2105052, kvkDeathGoal: 252606, kvkScoreGoal: 2357659 },
-            { id: 200478463, name: "Bianca 05", power: 21025670, kvkKpGoal: 2102567, kvkDeathGoal: 252308, kvkScoreGoal: 2354875 },
-            { id: 199776000, name: "FıRTıNa", power: 20998861, kvkKpGoal: 2099886, kvkDeathGoal: 251986, kvkScoreGoal: 2351872 },
-            { id: 192474715, name: "beka110", power: 20902955, kvkKpGoal: 2090296, kvkDeathGoal: 250835, kvkScoreGoal: 2341131 },
-            { id: 199755965, name: "ᴰᴸSedeolFr", power: 20780888, kvkKpGoal: 2078089, kvkDeathGoal: 249371, kvkScoreGoal: 2327459 },
-            { id: 193999196, name: "Linnepe22", power: 20772313, kvkKpGoal: 2077231, kvkDeathGoal: 249268, kvkScoreGoal: 2326499 },
-            { id: 197820099, name: "ᴳᴬEMI5", power: 20767924, kvkKpGoal: 2076792, kvkDeathGoal: 249215, kvkScoreGoal: 2326007 },
-            { id: 200472940, name: "ᵘᶜ EagleEye", power: 20640026, kvkKpGoal: 2064003, kvkDeathGoal: 247680, kvkScoreGoal: 2311683 },
-            { id: 200468900, name: "Reino de Isther", power: 20561035, kvkKpGoal: 2056104, kvkDeathGoal: 246732, kvkScoreGoal: 2302836 },
-            { id: 197747158, name: "Chief Yamii", power: 20525222, kvkKpGoal: 2052522, kvkDeathGoal: 246303, kvkScoreGoal: 2298825 },
-            { id: 199030237, name: "strong tiger", power: 20504813, kvkKpGoal: 2050481, kvkDeathGoal: 246058, kvkScoreGoal: 2296539 },
-            { id: 200492096, name: "EricLaFramboise", power: 20488892, kvkKpGoal: 2048889, kvkDeathGoal: 245867, kvkScoreGoal: 2294756 },
-            { id: 200467461, name: "Winkelmans", power: 20478094, kvkKpGoal: 2047809, kvkDeathGoal: 245737, kvkScoreGoal: 2293547 },
-            { id: 197687798, name: "FEAR NOTHING11", power: 20446486, kvkKpGoal: 2044649, kvkDeathGoal: 245358, kvkScoreGoal: 2290006 },
-            { id: 197108326, name: "HUNEYBADGER", power: 20357004, kvkKpGoal: 2035700, kvkDeathGoal: 244284, kvkScoreGoal: 2279984 },
-            { id: 200455371, name: "Baibolll", power: 20298272, kvkKpGoal: 2029827, kvkDeathGoal: 243579, kvkScoreGoal: 2273406 },
-            { id: 200343405, name: "Achilles 004", power: 20275952, kvkKpGoal: 2027595, kvkDeathGoal: 243311, kvkScoreGoal: 2270907 },
-            { id: 198684708, name: "Maru98", power: 20275857, kvkKpGoal: 2027586, kvkDeathGoal: 243310, kvkScoreGoal: 2270896 },
-            { id: 198901247, name: "ᵁᶜSONIC II", power: 20168203, kvkKpGoal: 2016820, kvkDeathGoal: 242018, kvkScoreGoal: 2258839 },
-            { id: 199761428, name: "TTKhronos", power: 20043350, kvkKpGoal: 2004335, kvkDeathGoal: 240520, kvkScoreGoal: 2244855 },
-            { id: 200432209, name: "Kosty1708", power: 19985889, kvkKpGoal: 1998589, kvkDeathGoal: 239831, kvkScoreGoal: 2238420 },
-            { id: 199571710, name: "Dorum", power: 19879401, kvkKpGoal: 1987940, kvkDeathGoal: 238553, kvkScoreGoal: 2226493 },
-            { id: 199088900, name: "Aydyn17region", power: 19850167, kvkKpGoal: 1985017, kvkDeathGoal: 238202, kvkScoreGoal: 2223219 },
-            { id: 198823998, name: "〤Gaida", power: 19772276, kvkKpGoal: 1977228, kvkDeathGoal: 237267, kvkScoreGoal: 2214495 },
-            { id: 198920504, name: "ᵀᵂ Pen Z3RO", power: 19716344, kvkKpGoal: 1971634, kvkDeathGoal: 236596, kvkScoreGoal: 2208231 },
-            { id: 199750035, name: "Dokkka", power: 19497149, kvkKpGoal: 1949715, kvkDeathGoal: 233966, kvkScoreGoal: 2183681 },
-            { id: 200490761, name: "Ахмед0", power: 19494064, kvkKpGoal: 1949406, kvkDeathGoal: 233929, kvkScoreGoal: 2183335 },
-            { id: 198871108, name: "Thích Chết", power: 19454766, kvkKpGoal: 1945477, kvkDeathGoal: 233457, kvkScoreGoal: 2178934 },
-            { id: 200165677, name: "bịđánhcắp", power: 19393912, kvkKpGoal: 1939391, kvkDeathGoal: 232727, kvkScoreGoal: 2172118 },
-            { id: 197451183, name: "Huy Vo Farm 7", power: 19332452, kvkKpGoal: 1933245, kvkDeathGoal: 231989, kvkScoreGoal: 2165235 },
-            { id: 198001466, name: "REBELION123", power: 19183344, kvkKpGoal: 1918334, kvkDeathGoal: 230200, kvkScoreGoal: 2148535 },
-            { id: 200026111, name: "OjoDumeh", power: 19153592, kvkKpGoal: 1915359, kvkDeathGoal: 229843, kvkScoreGoal: 2145202 },
-            { id: 200249662, name: "ANJELO1", power: 18920593, kvkKpGoal: 1892059, kvkDeathGoal: 227047, kvkScoreGoal: 2119106 },
-            { id: 200199739, name: "DOUME002", power: 18834136, kvkKpGoal: 1883414, kvkDeathGoal: 226010, kvkScoreGoal: 2109423 },
-            { id: 200435196, name: "Union Hispana", power: 18742521, kvkKpGoal: 1874252, kvkDeathGoal: 224910, kvkScoreGoal: 2099162 },
-            { id: 200063865, name: "KiIIua Supply", power: 18513005, kvkKpGoal: 1851301, kvkDeathGoal: 222156, kvkScoreGoal: 2073457 },
-            { id: 199982428, name: "Boreale121", power: 18510165, kvkKpGoal: 1851017, kvkDeathGoal: 222122, kvkScoreGoal: 2073138 },
-            { id: 200451102, name: "Chechen l 95 l", power: 18270778, kvkKpGoal: 1827078, kvkDeathGoal: 219249, kvkScoreGoal: 2046327 },
-            { id: 197093354, name: "NhatKy", power: 18107749, kvkKpGoal: 1810775, kvkDeathGoal: 217293, kvkScoreGoal: 2028068 },
-            { id: 200465845, name: "ᵁᶜMakroni F", power: 17908763, kvkKpGoal: 1790876, kvkDeathGoal: 214905, kvkScoreGoal: 2005781 },
-            { id: 199275982, name: "PEMBURUxJANDA", power: 17893788, kvkKpGoal: 1789379, kvkDeathGoal: 214725, kvkScoreGoal: 2004104 },
-            { id: 198413911, name: "hugi8", power: 17803590, kvkKpGoal: 1780359, kvkDeathGoal: 213643, kvkScoreGoal: 1994002 },
-            { id: 200477860, name: "Alchemists", power: 17667563, kvkKpGoal: 1766756, kvkDeathGoal: 212011, kvkScoreGoal: 1978767 },
-            { id: 200461160, name: "Axel1302", power: 17656349, kvkKpGoal: 1765635, kvkDeathGoal: 211876, kvkScoreGoal: 1977511 },
-            { id: 200467150, name: "Lirik04", power: 17568295, kvkKpGoal: 1756830, kvkDeathGoal: 210820, kvkScoreGoal: 1967649 },
-            { id: 200479344, name: "Lord of Japan", power: 17537140, kvkKpGoal: 1753714, kvkDeathGoal: 210446, kvkScoreGoal: 1964160 },
-            { id: 188744482, name: "㋡EQUIPE CRIA", power: 17453684, kvkKpGoal: 1745368, kvkDeathGoal: 209444, kvkScoreGoal: 1954813 },
-            { id: 199110198, name: "tishaha", power: 17358254, kvkKpGoal: 1735825, kvkDeathGoal: 208299, kvkScoreGoal: 1944124 },
-            { id: 200433583, name: "Farrage", power: 17325569, kvkKpGoal: 1732557, kvkDeathGoal: 207907, kvkScoreGoal: 1940464 },
-            { id: 200424725, name: "Brave Kingdom", power: 17289365, kvkKpGoal: 1728937, kvkDeathGoal: 207472, kvkScoreGoal: 1936409 },
-            { id: 200355602, name: "Barann13", power: 17068056, kvkKpGoal: 1706806, kvkDeathGoal: 204817, kvkScoreGoal: 1911622 },
-            { id: 200452913, name: "Honey lin", power: 16879516, kvkKpGoal: 1687952, kvkDeathGoal: 202554, kvkScoreGoal: 1890506 },
-            { id: 199986517, name: "ᵁᶜlazydevil", power: 16871055, kvkKpGoal: 1687106, kvkDeathGoal: 202453, kvkScoreGoal: 1889558 },
-            { id: 199982044, name: "ᵁᶜmiao", power: 16762645, kvkKpGoal: 1676265, kvkDeathGoal: 201152, kvkScoreGoal: 1877416 },
-            { id: 200466578, name: "bellalena", power: 16691042, kvkKpGoal: 1669104, kvkDeathGoal: 200293, kvkScoreGoal: 1869397 },
-            { id: 200490946, name: "Rawelll", power: 16523804, kvkKpGoal: 1652380, kvkDeathGoal: 198286, kvkScoreGoal: 1850666 },
-            { id: 200443072, name: "AlbanecPWNZ", power: 16478521, kvkKpGoal: 1647852, kvkDeathGoal: 197742, kvkScoreGoal: 1845594 },
-            { id: 200486294, name: "mayoooo", power: 16474543, kvkKpGoal: 1647454, kvkDeathGoal: 197695, kvkScoreGoal: 1845149 },
-            { id: 200440365, name: "Redoob", power: 16403068, kvkKpGoal: 1640307, kvkDeathGoal: 196837, kvkScoreGoal: 1837144 },
-            { id: 200475898, name: "Alsofyani 12345", power: 16369155, kvkKpGoal: 1636916, kvkDeathGoal: 196430, kvkScoreGoal: 1833345 },
-            { id: 200475578, name: "ĐạiÁi farm", power: 16334491, kvkKpGoal: 1633449, kvkDeathGoal: 196014, kvkScoreGoal: 1829463 },
-            { id: 197332421, name: "Orokusan", power: 16303952, kvkKpGoal: 1630395, kvkDeathGoal: 195647, kvkScoreGoal: 1826043 },
-            { id: 204605059, name: "AnitaBombon", power: 16288249, kvkKpGoal: 1628825, kvkDeathGoal: 195459, kvkScoreGoal: 1824284 },
-            { id: 199531323, name: "ᴱˢHoàng", power: 16176002, kvkKpGoal: 1617600, kvkDeathGoal: 194112, kvkScoreGoal: 1811712 },
-            { id: 200026449, name: "ultrAslan34", power: 16102641, kvkKpGoal: 1610264, kvkDeathGoal: 193232, kvkScoreGoal: 1803496 },
-            { id: 205451819, name: "AzeonJr", power: 16024082, kvkKpGoal: 1602408, kvkDeathGoal: 192289, kvkScoreGoal: 1794697 },
-            { id: 200467470, name: "MarioZxC22", power: 15983359, kvkKpGoal: 1598336, kvkDeathGoal: 191800, kvkScoreGoal: 1790136 },
-            { id: 200447394, name: "Lekiii14", power: 15969812, kvkKpGoal: 1596981, kvkDeathGoal: 191638, kvkScoreGoal: 1788619 },
-            { id: 205451833, name: "AletheonJr", power: 15928661, kvkKpGoal: 1592866, kvkDeathGoal: 191144, kvkScoreGoal: 1784010 },
-            { id: 200428294, name: "MiinTaxi", power: 15901232, kvkKpGoal: 1590123, kvkDeathGoal: 190815, kvkScoreGoal: 1780938 },
-            { id: 200459849, name: "GuyWhoBeatsWife", power: 15854781, kvkKpGoal: 1585478, kvkDeathGoal: 190257, kvkScoreGoal: 1775735 },
-            { id: 200489348, name: "Aged", power: 15846885, kvkKpGoal: 1584689, kvkDeathGoal: 190163, kvkScoreGoal: 1774851 },
-            { id: 198195190, name: "d6e6a6d", power: 15697416, kvkKpGoal: 1569742, kvkDeathGoal: 188369, kvkScoreGoal: 1758111 },
-            { id: 200449116, name: "FC Beinbruch", power: 15610212, kvkKpGoal: 1561021, kvkDeathGoal: 187323, kvkScoreGoal: 1748344 },
-            { id: 201136198, name: "ILOVEBELI", power: 15565094, kvkKpGoal: 1556509, kvkDeathGoal: 186781, kvkScoreGoal: 1743291 },
-            { id: 200396180, name: "ᵁᶜChosenOne", power: 15559938, kvkKpGoal: 1555994, kvkDeathGoal: 186719, kvkScoreGoal: 1742713 },
-            { id: 194125590, name: "RyuuChann", power: 15434382, kvkKpGoal: 1543438, kvkDeathGoal: 185213, kvkScoreGoal: 1728651 },
-            { id: 200425864, name: "1RedRocket1", power: 15346400, kvkKpGoal: 1534640, kvkDeathGoal: 184157, kvkScoreGoal: 1718797 },
-            { id: 198037177, name: "ᴰᴰMiquella", power: 15258876, kvkKpGoal: 1525888, kvkDeathGoal: 183107, kvkScoreGoal: 1708994 },
-            { id: 197332553, name: "Alter Heide", power: 15134726, kvkKpGoal: 1513473, kvkDeathGoal: 181617, kvkScoreGoal: 1695089 },
-            { id: 199713632, name: "Tiu tiu", power: 15129455, kvkKpGoal: 1512946, kvkDeathGoal: 181553, kvkScoreGoal: 1694499 },
-            { id: 200462229, name: "Lee anh", power: 14988691, kvkKpGoal: 1498869, kvkDeathGoal: 179864, kvkScoreGoal: 1678733 },
-            { id: 197785055, name: "o҉ 爪o҉uśe", power: 14906767, kvkKpGoal: 1490677, kvkDeathGoal: 178881, kvkScoreGoal: 1669558 },
-            { id: 170361258, name: "فوضى 69", power: 14814481, kvkKpGoal: 1481448, kvkDeathGoal: 177774, kvkScoreGoal: 1659222 },
-            { id: 199945628, name: "FarmKqwer", power: 14782682, kvkKpGoal: 1478268, kvkDeathGoal: 177392, kvkScoreGoal: 1655660 },
-            { id: 190923384, name: "Ed x roar", power: 14749147, kvkKpGoal: 1474915, kvkDeathGoal: 176990, kvkScoreGoal: 1651904 },
-            { id: 203656814, name: "Feuuu2", power: 14631727, kvkKpGoal: 1463173, kvkDeathGoal: 175581, kvkScoreGoal: 1638753 },
-            { id: 200445019, name: "NOVAN F1", power: 14511932, kvkKpGoal: 1451193, kvkDeathGoal: 174143, kvkScoreGoal: 1625336 },
-            { id: 199974514, name: "PerSempre", power: 14511278, kvkKpGoal: 1451128, kvkDeathGoal: 174135, kvkScoreGoal: 1625263 },
-            { id: 198748663, name: "ᴰᴬ EL Grey", power: 14384998, kvkKpGoal: 1438500, kvkDeathGoal: 172620, kvkScoreGoal: 1611120 },
-            { id: 200448349, name: "vilgamer", power: 14364680, kvkKpGoal: 1436468, kvkDeathGoal: 172376, kvkScoreGoal: 1608844 },
-            { id: 199378578, name: "Məgäþrøň77", power: 14348803, kvkKpGoal: 1434880, kvkDeathGoal: 172186, kvkScoreGoal: 1607066 },
-            { id: 200422110, name: "ᵁᴴROCKO", power: 14327537, kvkKpGoal: 1432754, kvkDeathGoal: 171930, kvkScoreGoal: 1604684 },
-            { id: 199118622, name: "Tonyy1", power: 14285375, kvkKpGoal: 1428538, kvkDeathGoal: 171425, kvkScoreGoal: 1599962 },
-            { id: 199308061, name: "PhoenixFlame", power: 14280284, kvkKpGoal: 1428028, kvkDeathGoal: 171363, kvkScoreGoal: 1599392 },
-            { id: 198571084, name: "зелим", power: 14264143, kvkKpGoal: 1426414, kvkDeathGoal: 171170, kvkScoreGoal: 1597584 },
-            { id: 139312402, name: "MagiC DaY", power: 14236375, kvkKpGoal: 1423638, kvkDeathGoal: 170837, kvkScoreGoal: 1594474 },
-            { id: 201334809, name: "NOVAN F2", power: 14215607, kvkKpGoal: 1421561, kvkDeathGoal: 170587, kvkScoreGoal: 1592148 },
-            { id: 200420131, name: "Lozan", power: 14185897, kvkKpGoal: 1418590, kvkDeathGoal: 170231, kvkScoreGoal: 1588820 },
-            { id: 200027962, name: "ᵁᶜfexxnaita", power: 14184931, kvkKpGoal: 1418493, kvkDeathGoal: 170219, kvkScoreGoal: 1588712 },
-            { id: 200476166, name: "ᵘⁿPursuit", power: 14174855, kvkKpGoal: 1417486, kvkDeathGoal: 170098, kvkScoreGoal: 1587584 },
-            { id: 200465066, name: "ᵁᶜLuxJay", power: 14168837, kvkKpGoal: 1416884, kvkDeathGoal: 170026, kvkScoreGoal: 1586910 },
-            { id: 200472610, name: "fernando12", power: 14160543, kvkKpGoal: 1416054, kvkDeathGoal: 169927, kvkScoreGoal: 1585981 },
-            { id: 199439886, name: "ᴸᴷsicule28メ", power: 14149863, kvkKpGoal: 1414986, kvkDeathGoal: 169798, kvkScoreGoal: 1584785 },
-            { id: 193812096, name: "lomasturbas", power: 14138154, kvkKpGoal: 1413815, kvkDeathGoal: 169658, kvkScoreGoal: 1583473 },
-            { id: 198477234, name: "Griga23", power: 14119697, kvkKpGoal: 1411970, kvkDeathGoal: 169436, kvkScoreGoal: 1581406 },
-            { id: 200471435, name: "ᵁᴴmrcmwat", power: 14119070, kvkKpGoal: 1411907, kvkDeathGoal: 169429, kvkScoreGoal: 1581336 },
-            { id: 199767489, name: "Riverbat", power: 14079759, kvkKpGoal: 1407976, kvkDeathGoal: 168957, kvkScoreGoal: 1576933 },
-            { id: 200478129, name: "ᵁᶜ BadHabit", power: 14058836, kvkKpGoal: 1405884, kvkDeathGoal: 168706, kvkScoreGoal: 1574590 },
-            { id: 199973311, name: "ᵁᶜFein", power: 14010119, kvkKpGoal: 1401012, kvkDeathGoal: 168121, kvkScoreGoal: 1569133 },
-            { id: 200447505, name: "Shadywind", power: 13955942, kvkKpGoal: 1395594, kvkDeathGoal: 167471, kvkScoreGoal: 1563066 },
-            { id: 198672751, name: "HispanicThickPP", power: 13946833, kvkKpGoal: 1394683, kvkDeathGoal: 167362, kvkScoreGoal: 1562045 },
-            { id: 80063704, name: "ЧЕЧЕНЕЦ", power: 13918469, kvkKpGoal: 1391847, kvkDeathGoal: 167022, kvkScoreGoal: 1558869 },
-            { id: 200369306, name: "Hilzii", power: 13863337, kvkKpGoal: 1386334, kvkDeathGoal: 166360, kvkScoreGoal: 1552694 },
-            { id: 200873678, name: "tang sannn", power: 13817424, kvkKpGoal: 1381742, kvkDeathGoal: 165809, kvkScoreGoal: 1547551 },
-            { id: 200478165, name: "ᵁᶜ Rhaegal", power: 13764115, kvkKpGoal: 1376412, kvkDeathGoal: 165169, kvkScoreGoal: 1541581 },
-            { id: 200425209, name: "黄家四郎", power: 13760486, kvkKpGoal: 1376049, kvkDeathGoal: 165126, kvkScoreGoal: 1541174 },
-            { id: 197747733, name: "MagicTurtle ヤ", power: 13733145, kvkKpGoal: 1373315, kvkDeathGoal: 164798, kvkScoreGoal: 1538112 },
-            { id: 200446452, name: "1Arefin", power: 13626929, kvkKpGoal: 1362693, kvkDeathGoal: 163523, kvkScoreGoal: 1526216 },
-            { id: 200483407, name: "TâyHandsome", power: 13611032, kvkKpGoal: 1361103, kvkDeathGoal: 163332, kvkScoreGoal: 1524436 },
-            { id: 200002835, name: "ᵁᶜ Seebs", power: 13595646, kvkKpGoal: 1359565, kvkDeathGoal: 163148, kvkScoreGoal: 1522712 },
-            { id: 200116265, name: "DuyNam98", power: 13589792, kvkKpGoal: 1358979, kvkDeathGoal: 163078, kvkScoreGoal: 1522057 },
-            { id: 204604839, name: "ⁿKinderules", power: 13587579, kvkKpGoal: 1358758, kvkDeathGoal: 163051, kvkScoreGoal: 1521809 },
+        // Governor progress data
+        const governorData = [
+            { id: 193901926, name: "Marquis Haytham", powerPreKvk: 59729551, kvk4Goal: 6689710, progress: 4940414, achievement: 73.9 },
+            { id: 192297064, name: "ᵘᵒGismor", powerPreKvk: 42176213, kvk4Goal: 4723736, progress: 3327820, achievement: 70.4 },
+            { id: 194285018, name: "kekers", powerPreKvk: 54468331, kvk4Goal: 6100453, progress: 3842835, achievement: 63.0 },
+            { id: 194366383, name: "Nyx ﾒ", powerPreKvk: 57594590, kvk4Goal: 6450594, progress: 3303230, achievement: 51.2 },
+            { id: 194542576, name: "Marquise Ari", powerPreKvk: 57052368, kvk4Goal: 6389865, progress: 3052319, achievement: 47.8 },
+            { id: 191052762, name: "MajesticMallard", powerPreKvk: 61796841, kvk4Goal: 6921246, progress: 3146173, achievement: 45.5 },
+            { id: 190720024, name: "Sisu  〤3784", powerPreKvk: 91985393, kvk4Goal: 10302364, progress: 4674227, achievement: 45.4 },
+            { id: 197896909, name: "ᴬˢʰLiubei09", powerPreKvk: 50934681, kvk4Goal: 5704684, progress: 2303985, achievement: 40.4 },
+            { id: 200479596, name: "INSHIRO", powerPreKvk: 30345403, kvk4Goal: 3398685, progress: 1319214, achievement: 38.8 },
+            { id: 197486190, name: "ˢexyWindy", powerPreKvk: 36846942, kvk4Goal: 4126858, progress: 1589952, achievement: 38.5 },
+            { id: 200450118, name: "Kiryusha455", powerPreKvk: 24758996, kvk4Goal: 2773008, progress: 1026644, achievement: 37.0 },
+            { id: 194036233, name: "影Hawkʸ影", powerPreKvk: 65935849, kvk4Goal: 7384815, progress: 2695864, achievement: 36.5 },
+            { id: 200437145, name: "Enemy hunter", powerPreKvk: 31318716, kvk4Goal: 3507696, progress: 1198033, achievement: 34.2 },
+            { id: 200460536, name: "Pavel68", powerPreKvk: 35560389, kvk4Goal: 3982764, progress: 1332962, achievement: 33.5 },
+            { id: 190008440, name: "Cajdonni", powerPreKvk: 26366163, kvk4Goal: 2953010, progress: 904926, achievement: 30.6 },
+            { id: 199308899, name: "ARGYN KZ", powerPreKvk: 31958014, kvk4Goal: 3579298, progress: 980708, achievement: 27.4 },
+            { id: 197729532, name: "Fat Man One", powerPreKvk: 31372036, kvk4Goal: 3513668, progress: 923859, achievement: 26.3 },
+            { id: 200446815, name: "Chibrank", powerPreKvk: 33631681, kvk4Goal: 3766748, progress: 929105, achievement: 24.7 },
+            { id: 188859389, name: "STEPHEN2026", powerPreKvk: 45102097, kvk4Goal: 5051435, progress: 1243440, achievement: 24.6 },
+            { id: 192327803, name: "MĪKȺZȺヤ", powerPreKvk: 43545002, kvk4Goal: 4877040, progress: 1169387, achievement: 24.0 },
+            { id: 197690670, name: "Jack Dalt ツ", powerPreKvk: 40938000, kvk4Goal: 4585056, progress: 1094961, achievement: 23.9 },
+            { id: 197821617, name: "ᴬᴷJaguar", powerPreKvk: 40885049, kvk4Goal: 4579125, progress: 1088938, achievement: 23.8 },
+            { id: 192022889, name: "89Bowman", powerPreKvk: 59478741, kvk4Goal: 6661619, progress: 1552194, achievement: 23.3 },
+            { id: 197818598, name: "ᵁᶜMATY", powerPreKvk: 43665738, kvk4Goal: 4890563, progress: 1126682, achievement: 23.0 },
+            { id: 200138164, name: "ᵁᶜDestruds", powerPreKvk: 35851310, kvk4Goal: 4015347, progress: 887270, achievement: 22.1 },
+            { id: 199918872, name: "P o C o N g", powerPreKvk: 32259607, kvk4Goal: 3613076, progress: 794500, achievement: 22.0 },
+            { id: 197746250, name: "D o l o Rᵀᴹ", powerPreKvk: 45741412, kvk4Goal: 5123038, progress: 1121864, achievement: 21.9 },
+            { id: 188715377, name: "Pɑm", powerPreKvk: 42317541, kvk4Goal: 4739565, progress: 1026734, achievement: 21.7 },
+            { id: 189893847, name: "㋡CAOS", powerPreKvk: 53885230, kvk4Goal: 6035146, progress: 1296513, achievement: 21.5 },
+            { id: 195430795, name: "Ham5446", powerPreKvk: 61303008, kvk4Goal: 6865937, progress: 1472655, achievement: 21.4 },
+            { id: 191682058, name: "ARTHUR MORGAП", powerPreKvk: 40438576, kvk4Goal: 4529121, progress: 965168, achievement: 21.3 },
+            { id: 192231775, name: "ᴷᴵᴺᴳAR", powerPreKvk: 46049586, kvk4Goal: 5157554, progress: 1088774, achievement: 21.1 },
+            { id: 199537516, name: "MaxTzy", powerPreKvk: 43704785, kvk4Goal: 4894936, progress: 996412, achievement: 20.4 },
+            { id: 192677527, name: "HimSon1000", powerPreKvk: 33849447, kvk4Goal: 3791138, progress: 770711, achievement: 20.3 },
+            { id: 193869934, name: "Agent Altec", powerPreKvk: 65044076, kvk4Goal: 7284937, progress: 1477008, achievement: 20.3 },
+            { id: 197689104, name: "Joe Dalt", powerPreKvk: 45994086, kvk4Goal: 5151338, progress: 1044318, achievement: 20.3 },
+            { id: 199916172, name: "๖T o Y o L๖", powerPreKvk: 74408996, kvk4Goal: 8333808, progress: 1644915, achievement: 19.7 },
+            { id: 197394599, name: "안헬 AngeI", powerPreKvk: 43886534, kvk4Goal: 4915292, progress: 966604, achievement: 19.7 },
+            { id: 188862304, name: "㋡Ban", powerPreKvk: 52731669, kvk4Goal: 5905947, progress: 1086735, achievement: 18.4 },
+            { id: 200437993, name: "Reptiles", powerPreKvk: 43746023, kvk4Goal: 4899555, progress: 898868, achievement: 18.3 },
+            { id: 200427274, name: "Vlady1992", powerPreKvk: 28904777, kvk4Goal: 3237335, progress: 587599, achievement: 18.2 },
+            { id: 196966564, name: "Punchdaclown", powerPreKvk: 24710914, kvk4Goal: 2767622, progress: 487464, achievement: 17.6 },
+            { id: 191383950, name: "ᴷᴵᴺᴳAL", powerPreKvk: 48698002, kvk4Goal: 5454176, progress: 917275, achievement: 16.8 },
+            { id: 191898448, name: "ˢᴶメGodUsopp", powerPreKvk: 52503950, kvk4Goal: 5880442, progress: 981793, achievement: 16.7 },
+            { id: 197067966, name: "Mini StarBurst", powerPreKvk: 40510784, kvk4Goal: 4537208, progress: 722421, achievement: 15.9 },
+            { id: 197829331, name: "zenzki", powerPreKvk: 30102106, kvk4Goal: 3371436, progress: 530741, achievement: 15.7 },
+            { id: 194925918, name: "AĽí", powerPreKvk: 34405005, kvk4Goal: 3853361, progress: 600569, achievement: 15.6 },
+            { id: 197464861, name: "ᶦˣHuy Vo", powerPreKvk: 39124931, kvk4Goal: 4381992, progress: 670092, achievement: 15.3 },
+            { id: 199625232, name: "Mystique88", powerPreKvk: 23724119, kvk4Goal: 2657101, progress: 391007, achievement: 14.7 },
+            { id: 197649447, name: "Tawycb", powerPreKvk: 38312495, kvk4Goal: 4290999, progress: 618837, achievement: 14.4 },
+            { id: 194900251, name: "LowkeyUK", powerPreKvk: 41652456, kvk4Goal: 4665075, progress: 660042, achievement: 14.1 },
+            { id: 200442527, name: "Cedee", powerPreKvk: 45291561, kvk4Goal: 5072655, progress: 715740, achievement: 14.1 },
+            { id: 197820892, name: "ᴳᴹPotro", powerPreKvk: 36071014, kvk4Goal: 4039954, progress: 547632, achievement: 13.6 },
+            { id: 200459156, name: "Aletheon", powerPreKvk: 31800866, kvk4Goal: 3561697, progress: 475941, achievement: 13.4 },
+            { id: 200210088, name: "彡Swiftz彡", powerPreKvk: 39622625, kvk4Goal: 4437734, progress: 579404, achievement: 13.1 },
+            { id: 197907008, name: "PoKie", powerPreKvk: 28418741, kvk4Goal: 3182899, progress: 403291, achievement: 12.7 },
+            { id: 197759615, name: "GypsyPig", powerPreKvk: 56504341, kvk4Goal: 6328486, progress: 793981, achievement: 12.5 },
+            { id: 189348380, name: "㋡CaíqueDiniz", powerPreKvk: 51541406, kvk4Goal: 5772637, progress: 718780, achievement: 12.5 },
+            { id: 200015295, name: "YouDaRealArt", powerPreKvk: 25345421, kvk4Goal: 2838687, progress: 350160, achievement: 12.3 },
+            { id: 197251352, name: "DalejandroVz", powerPreKvk: 38190223, kvk4Goal: 4277305, progress: 522559, achievement: 12.2 },
+            { id: 198070529, name: "Ash Daltツ", powerPreKvk: 35056734, kvk4Goal: 3926354, progress: 471577, achievement: 12.0 },
+            { id: 197747185, name: "ﾔ 爪øuśe ﾔ", powerPreKvk: 32861562, kvk4Goal: 3680495, progress: 440634, achievement: 12.0 },
+            { id: 198840570, name: "乂Bulbasaur乂", powerPreKvk: 57562266, kvk4Goal: 6446974, progress: 769086, achievement: 11.9 },
+            { id: 198113009, name: "GrunnCat Pirate", powerPreKvk: 59078480, kvk4Goal: 6616790, progress: 787322, achievement: 11.9 },
+            { id: 198191316, name: "Phoєnixツ", powerPreKvk: 45489876, kvk4Goal: 5094866, progress: 595930, achievement: 11.7 },
+            { id: 197690471, name: "Bob Dalt ツ", powerPreKvk: 45422020, kvk4Goal: 5087266, progress: 594845, achievement: 11.7 },
+            { id: 193108623, name: "Wartisan", powerPreKvk: 49950332, kvk4Goal: 5594437, progress: 647750, achievement: 11.6 },
+            { id: 194793286, name: "Knightshade BLK", powerPreKvk: 38358635, kvk4Goal: 4296167, progress: 486590, achievement: 11.3 },
+            { id: 197818671, name: "ᵁᶜB O R O S", powerPreKvk: 44677814, kvk4Goal: 5003915, progress: 565231, achievement: 11.3 },
+            { id: 198836918, name: "乂Porygon乂", powerPreKvk: 37936892, kvk4Goal: 4248932, progress: 476978, achievement: 11.2 },
+            { id: 197539017, name: "TakmaAdNe", powerPreKvk: 57119126, kvk4Goal: 6397342, progress: 717720, achievement: 11.2 },
+            { id: 200195796, name: "ᵁᶜAmadaKala", powerPreKvk: 61313556, kvk4Goal: 6867118, progress: 760099, achievement: 11.1 },
+            { id: 199969448, name: "ᵁᶜMakroni", powerPreKvk: 44935352, kvk4Goal: 5032759, progress: 541444, achievement: 10.8 },
+            { id: 197454059, name: "ᶳᶺAkAzA", powerPreKvk: 43220146, kvk4Goal: 4840656, progress: 486502, achievement: 10.1 },
+            { id: 200042887, name: "ᵁᶜSendFlux", powerPreKvk: 42259117, kvk4Goal: 4733021, progress: 475026, achievement: 10.0 },
+            { id: 191426042, name: "骸 Lilia", powerPreKvk: 30670598, kvk4Goal: 3435107, progress: 342683, achievement: 10.0 },
+            { id: 197746436, name: "DogusPrime", powerPreKvk: 42146558, kvk4Goal: 4720414, progress: 466932, achievement: 9.9 },
+            { id: 199983566, name: "MevriK", powerPreKvk: 43466157, kvk4Goal: 4868210, progress: 478793, achievement: 9.8 },
+            { id: 200058638, name: "ᵁᶜCeruus", powerPreKvk: 47574356, kvk4Goal: 5328328, progress: 517664, achievement: 9.7 },
+            { id: 200470732, name: "Omar Elsawhly", powerPreKvk: 28787853, kvk4Goal: 3224240, progress: 302465, achievement: 9.4 },
+            { id: 199983567, name: "Mevrik farm 2", powerPreKvk: 33579329, kvk4Goal: 3760885, progress: 350996, achievement: 9.3 },
+            { id: 200462811, name: "demon desteuc", powerPreKvk: 26224934, kvk4Goal: 2937193, progress: 269602, achievement: 9.2 },
+            { id: 199970598, name: "ᵁᶜ Nico113", powerPreKvk: 31547866, kvk4Goal: 3533361, progress: 321612, achievement: 9.1 },
+            { id: 197585242, name: "ᵁᶜCatt", powerPreKvk: 43207977, kvk4Goal: 4839293, progress: 435698, achievement: 9.0 },
+            { id: 197791854, name: "ZiKo  Dalt ツ", powerPreKvk: 37993609, kvk4Goal: 4255284, progress: 368755, achievement: 8.7 },
+            { id: 201544400, name: "ᴵᴮDark", powerPreKvk: 41835755, kvk4Goal: 4685605, progress: 401484, achievement: 8.6 },
+            { id: 197380701, name: "DeBowen", powerPreKvk: 36426122, kvk4Goal: 4079726, progress: 348020, achievement: 8.5 },
+            { id: 201165815, name: "ᴵᴮWillow", powerPreKvk: 41919698, kvk4Goal: 4695006, progress: 377862, achievement: 8.0 },
+            { id: 199125057, name: "Excalot4880", powerPreKvk: 28174663, kvk4Goal: 3155562, progress: 242606, achievement: 7.7 },
+            { id: 196635767, name: "TShelby ʰᶜ", powerPreKvk: 34689358, kvk4Goal: 3885208, progress: 292672, achievement: 7.5 },
+            { id: 167008257, name: "ᴮᵒᵗ6ICU", powerPreKvk: 38346351, kvk4Goal: 4294791, progress: 314148, achievement: 7.3 },
+            { id: 192102200, name: "ᶠᵖ Hunter", powerPreKvk: 29012217, kvk4Goal: 3249368, progress: 219512, achievement: 6.8 },
+            { id: 199674057, name: "Chiu chiu", powerPreKvk: 51755886, kvk4Goal: 5796659, progress: 389121, achievement: 6.7 },
+            { id: 193107946, name: "Krongs 永 23", powerPreKvk: 63744679, kvk4Goal: 7139404, progress: 477922, achievement: 6.7 },
+            { id: 198065825, name: "ᴳˢMelih Dalt", powerPreKvk: 25617454, kvk4Goal: 2869155, progress: 179061, achievement: 6.2 },
+            { id: 196872574, name: "WOLF ARMY 01", powerPreKvk: 40596795, kvk4Goal: 4546841, progress: 279399, achievement: 6.1 },
+            { id: 198290981, name: "Lord KT EE", powerPreKvk: 45236905, kvk4Goal: 5066533, progress: 310640, achievement: 6.1 },
+            { id: 200425853, name: "Damasko", powerPreKvk: 24649330, kvk4Goal: 2760725, progress: 160124, achievement: 5.8 },
+            { id: 198191140, name: "Hïrōki", powerPreKvk: 42463707, kvk4Goal: 4755935, progress: 273077, achievement: 5.7 },
+            { id: 197099116, name: "光LordDarkness", powerPreKvk: 69948725, kvk4Goal: 7834257, progress: 415926, achievement: 5.3 },
+            { id: 200451234, name: "Parizzzzzzz", powerPreKvk: 29849549, kvk4Goal: 3343149, progress: 145638, achievement: 4.4 },
+            { id: 197702319, name: "Mue Dalt ツ", powerPreKvk: 33943296, kvk4Goal: 3801649, progress: 161259, achievement: 4.2 },
+            { id: 199823222, name: "ĿampangCat", powerPreKvk: 36741203, kvk4Goal: 4115015, progress: 163646, achievement: 4.0 },
+            { id: 200011247, name: "Maks310892", powerPreKvk: 27764035, kvk4Goal: 3109572, progress: 122911, achievement: 4.0 },
+            { id: 198604700, name: "ᴮᵃIMAGIN", powerPreKvk: 38780506, kvk4Goal: 4343417, progress: 154956, achievement: 3.6 },
+            { id: 192058861, name: "MIBOY", powerPreKvk: 34638615, kvk4Goal: 3879525, progress: 138141, achievement: 3.6 },
+            { id: 193160416, name: "Yaskoh", powerPreKvk: 26630618, kvk4Goal: 2982629, progress: 104243, achievement: 3.5 },
+            { id: 200076695, name: "๖ۣۜLøøtBøy", powerPreKvk: 36368069, kvk4Goal: 4073224, progress: 141513, achievement: 3.5 },
+            { id: 196532046, name: "rryl", powerPreKvk: 32675207, kvk4Goal: 3659623, progress: 126078, achievement: 3.4 },
+            { id: 199706315, name: "ᵁᶜFreya", powerPreKvk: 43495245, kvk4Goal: 4871467, progress: 162237, achievement: 3.3 },
+            { id: 198653194, name: "ᴿᴸChauBacHo", powerPreKvk: 32887693, kvk4Goal: 3683422, progress: 121011, achievement: 3.3 },
+            { id: 200146230, name: "ᴬᴷMarti", powerPreKvk: 37192178, kvk4Goal: 4165524, progress: 129278, achievement: 3.1 },
+            { id: 195765863, name: "ᵁᶜㄴŁuukメㄱ", powerPreKvk: 33436772, kvk4Goal: 3744918, progress: 111384, achievement: 3.0 },
+            { id: 200454343, name: "Glitch guy", powerPreKvk: 24318067, kvk4Goal: 2723624, progress: 72998, achievement: 2.7 },
+            { id: 194793930, name: "ÉL GUAPO", powerPreKvk: 30874565, kvk4Goal: 3457951, progress: 88335, achievement: 2.6 },
+            { id: 179626728, name: "ᴴᴷ luffy 24", powerPreKvk: 38737504, kvk4Goal: 4338600, progress: 91393, achievement: 2.1 },
+            { id: 198650769, name: "ᶜˢSpinster", powerPreKvk: 36411810, kvk4Goal: 4078123, progress: 78126, achievement: 1.9 },
+            { id: 198167010, name: "ᵀᴮElectrek", powerPreKvk: 34250227, kvk4Goal: 3836025, progress: 69819, achievement: 1.8 },
+            { id: 200423363, name: "Apps78", powerPreKvk: 21909697, kvk4Goal: 2453886, progress: 41105, achievement: 1.7 },
+            { id: 198823998, name: "〤Gaida", powerPreKvk: 19772276, kvk4Goal: 2214495, progress: 27775, achievement: 1.3 },
+            { id: 194502563, name: "Prillie X Laz", powerPreKvk: 36875016, kvk4Goal: 4130002, progress: 39382, achievement: 1.0 },
+            { id: 200026111, name: "OjoDumeh", powerPreKvk: 19153592, kvk4Goal: 2145202, progress: 15468, achievement: 0.7 },
+            { id: 200181190, name: "CatEnjoyer", powerPreKvk: 25508640, kvk4Goal: 2856968, progress: 18404, achievement: 0.6 },
+            { id: 197747158, name: "Chief Yamii", powerPreKvk: 20525222, kvk4Goal: 2298825, progress: 8067, achievement: 0.4 },
+            { id: 197308475, name: "DalejandroAp", powerPreKvk: 23597854, kvk4Goal: 2642960, progress: 6483, achievement: 0.2 },
+            { id: 193869218, name: "MinaNoShit", powerPreKvk: 48668837, kvk4Goal: 5450910, progress: 9500, achievement: 0.2 },
+            { id: 201511346, name: "Sniper42", powerPreKvk: 24520279, kvk4Goal: 2746271, progress: 3273, achievement: 0.1 },
+            { id: 197746890, name: "StarBurst", powerPreKvk: 35019029, kvk4Goal: 3922131, progress: 3512, achievement: 0.1 },
+            { id: 197818595, name: "jaguarfarm", powerPreKvk: 26664690, kvk4Goal: 2986445, progress: 2190, achievement: 0.1 },
         ];
+
+        let currentSort = 'achievement';
+        let currentData = [...governorData];
 
         // Format number with commas
         function formatNumber(num) {
@@ -645,20 +519,33 @@
         }
 
         // Populate table
-        function populateTable(data = governorData) {
+        function populateTable(data = currentData) {
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
             
             data.forEach((gov, index) => {
                 const row = document.createElement('tr');
+                const progressDisplay = gov.progress !== null ? formatNumber(gov.progress) : 'N/A';
+                const achievementDisplay = gov.achievement !== null ? gov.achievement.toFixed(1) : 'N/A';
+                const progressPercent = gov.achievement !== null ? Math.min(gov.achievement, 100) : 0;
+                
                 row.innerHTML = `
                     <td class="rank">${index + 1}</td>
-                    <td>${gov.id}</td>
                     <td class="governor-name">${gov.name}</td>
-                    <td class="number">${formatNumber(gov.power)}</td>
-                    <td class="number">${formatNumber(gov.kvkKpGoal)}</td>
-                    <td class="number">${formatNumber(gov.kvkDeathGoal)}</td>
-                    <td class="number">${formatNumber(gov.kvkScoreGoal)}</td>
+                    <td class="number">${gov.id}</td>
+                    <td class="number">${formatNumber(gov.powerPreKvk)}</td>
+                    <td class="number">${formatNumber(gov.kvk4Goal)}</td>
+                    <td class="number">${progressDisplay}</td>
+                    <td>
+                        ${gov.achievement !== null ? `
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%;">
+                                    ${achievementDisplay}%
+                                </div>
+                            </div>
+                        ` : '<span style="color: #8b949e;">N/A</span>'}
+                    </td>
+                    <td class="percent">${achievementDisplay}%</td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -671,20 +558,53 @@
                 gov.name.toLowerCase().includes(searchTerm) || 
                 gov.id.toString().includes(searchTerm)
             );
-            populateTable(filtered);
+            currentData = [...filtered];
+            sortTable(currentSort);
         });
 
+        // Sort functionality
+        window.sortTable = function(type) {
+            currentSort = type;
+            
+            // Update button states
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (type === 'achievement') {
+                currentData.sort((a, b) => {
+                    const aVal = a.achievement !== null ? a.achievement : -1;
+                    const bVal = b.achievement !== null ? b.achievement : -1;
+                    return bVal - aVal;
+                });
+            } else if (type === 'progress') {
+                currentData.sort((a, b) => {
+                    const aVal = a.progress !== null ? a.progress : -1;
+                    const bVal = b.progress !== null ? b.progress : -1;
+                    return bVal - aVal;
+                });
+            } else if (type === 'name') {
+                currentData.sort((a, b) => a.name.localeCompare(b.name));
+            }
+            
+            populateTable(currentData);
+        };
+
         // Calculate statistics
-        function calculateStats() {
-            const avgPower = Math.floor(governorData.reduce((sum, gov) => sum + gov.power, 0) / governorData.length);
-            document.getElementById('avgPower').textContent = formatNumber(avgPower);
+        function updateStats() {
+            const withProgress = governorData.filter(g => g.progress !== null);
+            const totalProgress = withProgress.reduce((sum, gov) => sum + (gov.progress || 0), 0);
+            const avgAchievement = withProgress.length > 0 
+                ? (withProgress.reduce((sum, gov) => sum + (gov.achievement || 0), 0) / withProgress.length).toFixed(1)
+                : 0;
+            
             document.getElementById('totalGovs').textContent = governorData.length;
-            document.getElementById('topPower').textContent = formatNumber(governorData[0].power);
+            document.getElementById('totalProgress').textContent = formatNumber(totalProgress);
+            document.getElementById('avgAchievement').textContent = avgAchievement;
         }
 
         // Initialize
         populateTable();
-        calculateStats();
+        updateStats();
     </script>
 </body>
 </html>

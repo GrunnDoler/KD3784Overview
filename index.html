@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KvK4 Governor Name Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #0d1117;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #0d1117;
+            color: #c9d1d9;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-box input::placeholder {
+            color: #8b949e;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #1f6feb;
+            box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        .filter-btn.active {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: #0d1117;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .stat-card {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #30363d;
+        }
+
+        .stat-card h3 {
+            color: #58a6ff;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .stat-card p {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #c9d1d9;
+            font-family: 'Courier New', monospace;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            background: #161b22;
+        }
+
+        thead {
+            background: #0d1117;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95em;
+            border-bottom: 2px solid #30363d;
+            color: #58a6ff;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        tbody tr {
+            transition: background-color 0.15s;
+        }
+
+        tbody tr:hover {
+            background-color: #0d1117;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #0d1117;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #161b22;
+        }
+
+        .rank {
+            font-weight: 600;
+            color: #79c0ff;
+            width: 50px;
+            text-align: center;
+        }
+
+        .governor-id {
+            font-family: 'Courier New', monospace;
+            color: #79c0ff;
+            font-weight: 500;
+        }
+
+        .governor-name {
+            font-weight: 500;
+            color: #c9d1d9;
+            min-width: 150px;
+        }
+
+        .new-name {
+            font-weight: 500;
+            color: #58a6ff;
+            min-width: 150px;
+        }
+
+        .number {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            color: #79c0ff;
+        }
+
+        .progress-bar {
+            display: inline-block;
+            width: 120px;
+            height: 20px;
+            background: #30363d;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #1f6feb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        .percent {
+            text-align: right;
+            color: #79c0ff;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .remark {
+            color: #ffa657;
+            font-style: italic;
+            min-width: 150px;
+        }
+
+        .na-value {
+            color: #8b949e;
+            font-style: italic;
+        }
+
+        .footer {
+            padding: 20px;
+            background: #0d1117;
+            text-align: center;
+            color: #8b949e;
+            border-top: 1px solid #30363d;
+            font-size: 0.9em;
+        }
+
+        .info-banner {
+            padding: 15px;
+            background: #0d1117;
+            border-bottom: 1px solid #30363d;
+            border-left: 3px solid #58a6ff;
+            color: #c9d1d9;
+            margin: 0;
+        }
+
+        .info-banner strong {
+            color: #58a6ff;
+        }
+
+        @media (max-width: 1024px) {
+            th, td {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+
+            .progress-bar {
+                width: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            th, td {
+                padding: 6px;
+                font-size: 0.75em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 KvK4 Governor Name Tracker</h1>
+            <p>Governor Information, Name Changes & Progress Overview</p>
+        </div>
+
+        <div class="info-banner">
+            <strong>👥 Total Governors:</strong> <span id="totalGovs">0</span> | 
+            <strong>✏️ Name Changes:</strong> <span id="nameChanges">0</span> | 
+            <strong>✅ With Progress:</strong> <span id="withProgress">0</span> | 
+            <strong>📊 Avg Achievement:</strong> <span id="avgAchievement">0</span>%
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search by Governor Name, ID, or New Name...">
+            </div>
+            <div class="filter-controls">
+                <button class="filter-btn active" onclick="filterData('all')">All</button>
+                <button class="filter-btn" onclick="filterData('namechanged')">Name Changed</button>
+                <button class="filter-btn" onclick="filterData('withprogress')">With Progress</button>
+                <button class="filter-btn" onclick="filterData('noprogress')">No Progress</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>📊 Total Governors</h3>
+                <p id="statTotalGovs">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>✏️ Renamed</h3>
+                <p id="statRenamed">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>✅ Active (With Progress)</h3>
+                <p id="statActive">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>📈 Avg Achievement</h3>
+                <p id="statAvgAch">0%</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Rank</th>
+                        <th style="min-width: 120px;">Governor ID</th>
+                        <th style="min-width: 150px;">Governor Name</th>
+                        <th style="min-width: 150px;">New Name</th>
+                        <th class="number">Power Pre-KvK</th>
+                        <th class="number">KvK 4 Goal</th>
+                        <th class="number">Progress</th>
+                        <th style="width: 140px;">Progress Visual</th>
+                        <th class="percent">% Achieved</th>
+                        <th style="min-width: 150px;">Remark</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 KvK4 Governor Tracker - Last Updated: March 2, 2026 | GitHub Wiki</p>
+        </div>
+    </div>
+
+    <script>
+        // Governor data with name changes
+        const governorData = [
+            { id: 200445642, name: "Freakpower", newName: "", powerPreKvk: 33624182, kvk4Goal: 3765908, progress: null, achievement: null, remark: "" },
+            { id: 200456037, name: "HungBullet", newName: "", powerPreKvk: 28810740, kvk4Goal: 3226803, progress: null, achievement: null, remark: "" },
+            { id: 198065917, name: "Szary Prorok", newName: "", powerPreKvk: 27166549, kvk4Goal: 3042653, progress: null, achievement: null, remark: "" },
+            { id: 199810959, name: "ʀɢ Saboter", newName: "", powerPreKvk: 25143156, kvk4Goal: 2816033, progress: null, achievement: null, remark: "" },
+            { id: 200048422, name: "Well Farm 6", newName: "", powerPreKvk: 24905071, kvk4Goal: 2789368, progress: null, achievement: null, remark: "" },
+            { id: 200080963, name: "ᵁᶜSix", newName: "", powerPreKvk: 23248124, kvk4Goal: 2603790, progress: null, achievement: null, remark: "" },
+            { id: 200418345, name: "ᵁᶜLЄO҉", newName: "", powerPreKvk: 23159251, kvk4Goal: 2593836, progress: null, achievement: null, remark: "" },
+            { id: 199986517, name: "ᵁᶜlazydevil", newName: "", powerPreKvk: 16871055, kvk4Goal: 1889558, progress: null, achievement: null, remark: "" },
+            { id: 199982044, name: "ᵁᶜmiao", newName: "", powerPreKvk: 16762645, kvk4Goal: 1877416, progress: null, achievement: null, remark: "" },
+            { id: 200475578, name: "ĐạiÁi farm", newName: "", powerPreKvk: 16334491, kvk4Goal: 1829463, progress: null, achievement: null, remark: "" },
+            { id: 200026449, name: "ultrAslan34", newName: "", powerPreKvk: 16102641, kvk4Goal: 1803496, progress: null, achievement: null, remark: "" },
+            { id: 200396180, name: "ᵁᶜChosenOne", newName: "", powerPreKvk: 15559938, kvk4Goal: 1742713, progress: null, achievement: null, remark: "" },
+            { id: 199974514, name: "PerSempre", newName: "", powerPreKvk: 14511278, kvk4Goal: 1625263, progress: null, achievement: null, remark: "" },
+            { id: 200476166, name: "ᵘⁿPursuit", newName: "", powerPreKvk: 14174855, kvk4Goal: 1587584, progress: null, achievement: null, remark: "" },
+            { id: 200452740, name: "Karpovv", newName: "", powerPreKvk: 22049822, kvk4Goal: 2469580, progress: null, achievement: null, remark: "" },
+            { id: 198692471, name: "ᴵᴹKhầy", newName: "", powerPreKvk: 21671107, kvk4Goal: 2427164, progress: null, achievement: null, remark: "" },
+            { id: 200325295, name: "KiragawaKazuto", newName: "", powerPreKvk: 21050524, kvk4Goal: 2357659, progress: null, achievement: null, remark: "" },
+            { id: 192474715, name: "beka110", newName: "", powerPreKvk: 20902955, kvk4Goal: 2341131, progress: null, achievement: null, remark: "" },
+            { id: 200472940, name: "ᵘᶜ EagleEye", newName: "", powerPreKvk: 20640026, kvk4Goal: 2311683, progress: null, achievement: null, remark: "" },
+            { id: 199761428, name: "TTKhronos", newName: "", powerPreKvk: 20043350, kvk4Goal: 2244855, progress: null, achievement: null, remark: "" },
+            { id: 199750035, name: "Dokkka", newName: "", powerPreKvk: 19497149, kvk4Goal: 2183681, progress: null, achievement: null, remark: "" },
+            { id: 198871108, name: "Thích Chết", newName: "", powerPreKvk: 19454766, kvk4Goal: 2178934, progress: null, achievement: null, remark: "" },
+            { id: 200249662, name: "ANJELO1", newName: "", powerPreKvk: 18920593, kvk4Goal: 2119106, progress: null, achievement: null, remark: "" },
+            { id: 198413911, name: "hugi8", newName: "", powerPreKvk: 17803590, kvk4Goal: 1994002, progress: null, achievement: null, remark: "" },
+            { id: 199110198, name: "tishaha", newName: "", powerPreKvk: 17358254, kvk4Goal: 1944124, progress: null, achievement: null, remark: "" },
+            { id: 200448349, name: "vilgamer", newName: "", powerPreKvk: 14364680, kvk4Goal: 1608844, progress: null, achievement: null, remark: "" },
+            { id: 200422110, name: "ᵁᴴROCKO", newName: "", powerPreKvk: 14327537, kvk4Goal: 1604684, progress: null, achievement: null, remark: "" },
+            { id: 193901926, name: "Marquis Haytham", newName: "Marquis Haytham", powerPreKvk: 59729551, kvk4Goal: 6689710, progress: 5230939, achievement: 78.2, remark: "" },
+            { id: 192297064, name: "ᵘᵒGismor", newName: "ᵘᵒGismor", powerPreKvk: 42176213, kvk4Goal: 4723736, progress: 3327820, achievement: 70.4, remark: "" },
+            { id: 194285018, name: "kekers", newName: "kekers", powerPreKvk: 54468331, kvk4Goal: 6100453, progress: 3842835, achievement: 63.0, remark: "" },
+            { id: 194366383, name: "Nyx ﾒ", newName: "Nyx ﾒ", powerPreKvk: 57594590, kvk4Goal: 6450594, progress: 3728335, achievement: 57.8, remark: "" },
+            { id: 191052762, name: "MajesticMallard", newName: "MajesticMallard", powerPreKvk: 61796841, kvk4Goal: 6921246, progress: 3625564, achievement: 52.4, remark: "" },
+            { id: 194542576, name: "Marquise Ari", newName: "Marquise Ari", powerPreKvk: 57052368, kvk4Goal: 6389865, progress: 3077255, achievement: 48.2, remark: "T1 Feeder" },
+            { id: 190720024, name: "Sisu  〤3784", newName: "Sisu  〤3784", powerPreKvk: 91985393, kvk4Goal: 10302364, progress: 4935181, achievement: 47.9, remark: "" },
+            { id: 197896909, name: "ᴬˢʰLiubei09", newName: "ᴬˢʰLiubei09", powerPreKvk: 50934681, kvk4Goal: 5704684, progress: 2379054, achievement: 41.7, remark: "" },
+            { id: 200479596, name: "INSHIRO", newName: "INSHIRO", powerPreKvk: 30345403, kvk4Goal: 3398685, progress: 1319214, achievement: 38.8, remark: "" },
+            { id: 197486190, name: "ˢexyWindy", newName: "ˢexyWindy", powerPreKvk: 36846942, kvk4Goal: 4126858, progress: 1589952, achievement: 38.5, remark: "T1 Feeder" },
+            { id: 200450118, name: "Kiryusha455", newName: "Kiryusha455", powerPreKvk: 24758996, kvk4Goal: 2773008, progress: 1026644, achievement: 37.0, remark: "" },
+            { id: 194036233, name: "影Hawkʸ影", newName: "影Hawkʸ影", powerPreKvk: 65935849, kvk4Goal: 7384815, progress: 2708549, achievement: 36.7, remark: "T1 Farmer & MGE Rouge" },
+            { id: 200437145, name: "Enemy hunter", newName: "Enemy hunter", powerPreKvk: 31318716, kvk4Goal: 3507696, progress: 1200370, achievement: 34.2, remark: "" },
+            { id: 200460536, name: "Pavel68", newName: "Pavel68", powerPreKvk: 35560389, kvk4Goal: 3982764, progress: 1332962, achievement: 33.5, remark: "" },
+            { id: 190008440, name: "Cajdonni", newName: "Cajdonni", powerPreKvk: 26366163, kvk4Goal: 2953010, progress: 904926, achievement: 30.6, remark: "" },
+            { id: 199308899, name: "ARGYN KZ", newName: "ARGYN KZ", powerPreKvk: 31958014, kvk4Goal: 3579298, progress: 980708, achievement: 27.4, remark: "T1 Feeder" },
+            { id: 200138164, name: "ᵁᶜDestruds", newName: "ᵁᶜDestruds", powerPreKvk: 35851310, kvk4Goal: 4015347, progress: 1056663, achievement: 26.3, remark: "" },
+            { id: 197729532, name: "Fat Man One", newName: "Fat Man One", powerPreKvk: 31372036, kvk4Goal: 3513668, progress: 923859, achievement: 26.3, remark: "" },
+            { id: 197746250, name: "D o l o Rᵀᴹ", newName: "D o l o Rᵀᴹ", powerPreKvk: 45741412, kvk4Goal: 5123038, progress: 1334899, achievement: 26.1, remark: "" },
+            { id: 197821617, name: "ᴬᴷJaguar", newName: "ᴬᴷJaguar", powerPreKvk: 40885049, kvk4Goal: 4579125, progress: 1147178, achievement: 25.1, remark: "" },
+            { id: 200446815, name: "Chibrank", newName: "Chibrank", powerPreKvk: 33631681, kvk4Goal: 3766748, progress: 929105, achievement: 24.7, remark: "" },
+            { id: 188859389, name: "STEPHEN2026", newName: "StephenWithWdya", powerPreKvk: 45102097, kvk4Goal: 5051435, progress: 1243440, achievement: 24.6, remark: "" },
+            { id: 192022889, name: "89Bowman", newName: "89Bowman", powerPreKvk: 59478741, kvk4Goal: 6661619, progress: 1629088, achievement: 24.5, remark: "" },
+            { id: 197690670, name: "Jack Dalt ツ", newName: "Jack Dalt ツ", powerPreKvk: 40938000, kvk4Goal: 4585056, progress: 1118879, achievement: 24.4, remark: "" },
+            { id: 192231775, name: "ᴷᴵᴺᴳAR", newName: "ᴷᴵᴺᴳAR", powerPreKvk: 46049586, kvk4Goal: 5157554, progress: 1239357, achievement: 24.0, remark: "" },
+            { id: 192327803, name: "MĪKȺZȺヤ", newName: "MĪKȺZȺヤ", powerPreKvk: 43545002, kvk4Goal: 4877040, progress: 1169387, achievement: 24.0, remark: "" },
+            { id: 197818598, name: "ᵁᶜMATY", newName: "ᵁᶜMATY", powerPreKvk: 43665738, kvk4Goal: 4890563, progress: 1169156, achievement: 23.9, remark: "" },
+            { id: 189893847, name: "㋡CAOS", newName: "CRIA", powerPreKvk: 53885230, kvk4Goal: 6035146, progress: 1392370, achievement: 23.1, remark: "" },
+            { id: 195430795, name: "Ham5446", newName: "Ham5446", powerPreKvk: 61303008, kvk4Goal: 6865937, progress: 1582774, achievement: 23.1, remark: "" },
+            { id: 188715377, name: "Pɑm", newName: "Pɑm", powerPreKvk: 42317541, kvk4Goal: 4739565, progress: 1056466, achievement: 22.3, remark: "" },
+            { id: 191682058, name: "ARTHUR MORGAП", newName: "MORGAП", powerPreKvk: 40438576, kvk4Goal: 4529121, progress: 1003111, achievement: 22.1, remark: "" },
+            { id: 199918872, name: "P o C o N g", newName: "P o C o N g", powerPreKvk: 32259607, kvk4Goal: 3613076, progress: 794500, achievement: 22.0, remark: "T1 Feeder" },
+            { id: 199916172, name: "๖T o Y o L๖", newName: "๖T o Y o L๖", powerPreKvk: 74408996, kvk4Goal: 8333808, progress: 1787973, achievement: 21.5, remark: "" },
+            { id: 193869934, name: "Agent Altec", newName: "Agent Altec", powerPreKvk: 65044076, kvk4Goal: 7284937, progress: 1499532, achievement: 20.6, remark: "" },
+            { id: 199537516, name: "MaxTzy", newName: "MaxTzy", powerPreKvk: 43704785, kvk4Goal: 4894936, progress: 996412, achievement: 20.4, remark: "" },
+            { id: 192677527, name: "HimSon1000", newName: "HimSon1000", powerPreKvk: 33849447, kvk4Goal: 3791138, progress: 770711, achievement: 20.3, remark: "" },
+            { id: 197689104, name: "Joe Dalt", newName: "Joe Dalt", powerPreKvk: 45994086, kvk4Goal: 5151338, progress: 1044318, achievement: 20.3, remark: "" },
+            { id: 197394599, name: "안헬 AngeI", newName: "안헬 AngeI", powerPreKvk: 43886534, kvk4Goal: 4915292, progress: 966604, achievement: 19.7, remark: "" },
+            { id: 200427274, name: "Vlady1992", newName: "Vlady1992", powerPreKvk: 28904777, kvk4Goal: 3237335, progress: 617706, achievement: 19.1, remark: "" },
+            { id: 191383950, name: "ᴷᴵᴺᴳAL", newName: "ᴷᴵᴺᴳAL", powerPreKvk: 48698002, kvk4Goal: 5454176, progress: 1035633, achievement: 19.0, remark: "" },
+            { id: 188862304, name: "㋡Ban", newName: "㋡Ban", powerPreKvk: 52731669, kvk4Goal: 5905947, progress: 1107752, achievement: 18.8, remark: "" },
+            { id: 200437993, name: "Reptiles", newName: "Reptiles", powerPreKvk: 43746023, kvk4Goal: 4899555, progress: 913982, achievement: 18.7, remark: "" },
+            { id: 196966564, name: "Punchdaclown", newName: "Punchdaclown1", powerPreKvk: 24710914, kvk4Goal: 2767622, progress: 491219, achievement: 17.7, remark: "" },
+            { id: 191898448, name: "ˢᴶメGodUsopp", newName: "ˢᴶメGodUsopp", powerPreKvk: 52503950, kvk4Goal: 5880442, progress: 981793, achievement: 16.7, remark: "" },
+            { id: 197067966, name: "Mini StarBurst", newName: "Mini StarBurst", powerPreKvk: 40510784, kvk4Goal: 4537208, progress: 722421, achievement: 15.9, remark: "" },
+            { id: 197829331, name: "zenzki", newName: "zenzki", powerPreKvk: 30102106, kvk4Goal: 3371436, progress: 530741, achievement: 15.7, remark: "" },
+            { id: 194925918, name: "AĽí", newName: "AĽí", powerPreKvk: 34405005, kvk4Goal: 3853361, progress: 600569, achievement: 15.6, remark: "" },
+            { id: 197464861, name: "ᶦˣHuy Vo", newName: "ᶦˣHuy Vo", powerPreKvk: 39124931, kvk4Goal: 4381992, progress: 670092, achievement: 15.3, remark: "" },
+            { id: 197820892, name: "ᴳᴹPotro", newName: "ᴳᴹPotro", powerPreKvk: 36071014, kvk4Goal: 4039954, progress: 603515, achievement: 14.9, remark: "" },
+            { id: 199625232, name: "Mystique88", newName: "Mystique88", powerPreKvk: 23724119, kvk4Goal: 2657101, progress: 391007, achievement: 14.7, remark: "" },
+            { id: 200459156, name: "Aletheon", newName: "Aletheon", powerPreKvk: 31800866, kvk4Goal: 3561697, progress: 517187, achievement: 14.5, remark: "" },
+            { id: 197649447, name: "Tawycb", newName: "Tawycb", powerPreKvk: 38312495, kvk4Goal: 4290999, progress: 618837, achievement: 14.4, remark: "" },
+            { id: 197690471, name: "Bob Dalt ツ", newName: "Bob Dalt ツ", powerPreKvk: 45422020, kvk4Goal: 5087266, progress: 727213, achievement: 14.3, remark: "" },
+            { id: 194900251, name: "LowkeyUK", newName: "LowkeyUK", powerPreKvk: 41652456, kvk4Goal: 4665075, progress: 660042, achievement: 14.1, remark: "" },
+            { id: 200442527, name: "Cedee", newName: "Cedee", powerPreKvk: 45291561, kvk4Goal: 5072655, progress: 715740, achievement: 14.1, remark: "" },
+            { id: 197759615, name: "GypsyPig", newName: "GypsyPig", powerPreKvk: 56504341, kvk4Goal: 6328486, progress: 865360, achievement: 13.7, remark: "" },
+            { id: 189348380, name: "㋡CaíqueDiniz", newName: "㋡CaíqueDiniz", powerPreKvk: 51541406, kvk4Goal: 5772637, progress: 771636, achievement: 13.4, remark: "" },
+            { id: 200210088, name: "彡Swiftz彡", newName: "彡Swiftz彡", powerPreKvk: 39622625, kvk4Goal: 4437734, progress: 579404, achievement: 13.1, remark: "" },
+            { id: 197747185, name: "ﾔ 爪øuśe ﾔ", newName: "ﾔ 爪øuśe ﾔ", powerPreKvk: 32861562, kvk4Goal: 3680495, progress: 475766, achievement: 12.9, remark: "" },
+            { id: 198070529, name: "Ash Daltツ", newName: "Ash Daltツ", powerPreKvk: 35056734, kvk4Goal: 3926354, progress: 506397, achievement: 12.9, remark: "" },
+            { id: 197907008, name: "PoKie", newName: "PoKie", powerPreKvk: 28418741, kvk4Goal: 3182899, progress: 403291, achievement: 12.7, remark: "" },
+            { id: 197251352, name: "DalejandroVz", newName: "DalejandroVz", powerPreKvk: 38190223, kvk4Goal: 4277305, progress: 536620, achievement: 12.5, remark: "" },
+            { id: 200058638, name: "ᵁᶜCeruus", newName: "ᵁᶜCeruus", powerPreKvk: 47574356, kvk4Goal: 5328328, progress: 661800, achievement: 12.4, remark: "" },
+            { id: 200015295, name: "YouDaRealArt", newName: "YouDaRealArt", powerPreKvk: 25345421, kvk4Goal: 2838687, progress: 350160, achievement: 12.3, remark: "" },
+            { id: 193108623, name: "Wartisan", newName: "Wartisan", powerPreKvk: 49950332, kvk4Goal: 5594437, progress: 678473, achievement: 12.1, remark: "" },
+            { id: 197454059, name: "ᶳᶺAkAzA", newName: "ᶳᶺAkAzA", powerPreKvk: 43220146, kvk4Goal: 4840656, progress: 578860, achievement: 12.0, remark: "" },
+            { id: 198840570, name: "乂Bulbasaur乂", newName: "乂Bulbasaur乂", powerPreKvk: 57562266, kvk4Goal: 6446974, progress: 769086, achievement: 11.9, remark: "" },
+            { id: 198113009, name: "GrunnCat Pirate", newName: "GrunnCat Pirate", powerPreKvk: 59078480, kvk4Goal: 6616790, progress: 787322, achievement: 11.9, remark: "" },
+            { id: 198191316, name: "Phoєnixツ", newName: "Phoєnixツ", powerPreKvk: 45489876, kvk4Goal: 5094866, progress: 595930, achievement: 11.7, remark: "" },
+            { id: 194793286, name: "Knightshade BLK", newName: "Knightshade BLK", powerPreKvk: 38358635, kvk4Goal: 4296167, progress: 502366, achievement: 11.7, remark: "" },
+            { id: 198881865, name: "Móc Ra Nước", newName: "", powerPreKvk: 35408192, kvk4Goal: 3965718, progress: null, achievement: null, remark: "" },
+            { id: 199176389, name: "Móc Nát Bét", newName: "", powerPreKvk: 35239225, kvk4Goal: 3946793, progress: null, achievement: null, remark: "" },
+            { id: 198836918, name: "乂Porygon乂", newName: "乂Porygon乂", powerPreKvk: 37936892, kvk4Goal: 4248932, progress: 494223, achievement: 11.6, remark: "" },
+            { id: 197818671, name: "ᵁᶜB O R O S", newName: "ᵁᶜB O R O S", powerPreKvk: 44677814, kvk4Goal: 5003915, progress: 565231, achievement: 11.3, remark: "" },
+            { id: 197539017, name: "TakmaAdNe", newName: "TakmaAdNe", powerPreKvk: 57119126, kvk4Goal: 6397342, progress: 717720, achievement: 11.2, remark: "" },
+            { id: 200195796, name: "ᵁᶜAmadaKala", newName: "ᵁᶜAmadaKala", powerPreKvk: 61313556, kvk4Goal: 6867118, progress: 760099, achievement: 11.1, remark: "" },
+            { id: 199969448, name: "ᵁᶜMakroni", newName: "ᵁᶜMakroni", powerPreKvk: 44935352, kvk4Goal: 5032759, progress: 541455, achievement: 10.8, remark: "" },
+            { id: 197746436, name: "DogusPrime", newName: "DogusPrime", powerPreKvk: 42146558, kvk4Goal: 4720414, progress: 479289, achievement: 10.2, remark: "" },
+            { id: 200042887, name: "ᵁᶜSendFlux", newName: "ᵁᶜSendFlux", powerPreKvk: 42259117, kvk4Goal: 4733021, progress: 475026, achievement: 10.0, remark: "" },
+            { id: 191426042, name: "骸 Lilia", newName: "骸 Lilia", powerPreKvk: 30670598, kvk4Goal: 3435107, progress: 342683, achievement: 10.0, remark: "" },
+            { id: 200462811, name: "demon desteuc", newName: "demon desteuc", powerPreKvk: 26224934, kvk4Goal: 2937193, progress: 292656, achievement: 10.0, remark: "" },
+            { id: 199983566, name: "MevriK", newName: "MevriK", powerPreKvk: 43466157, kvk4Goal: 4868210, progress: 478793, achievement: 9.8, remark: "" },
+            { id: 197585242, name: "ᵁᶜCatt", newName: "ᵁᶜCatt", powerPreKvk: 43207977, kvk4Goal: 4839293, progress: 474242, achievement: 9.8, remark: "" },
+            { id: 200470732, name: "Omar Elsawhly", newName: "Omar Elsawhly", powerPreKvk: 28787853, kvk4Goal: 3224240, progress: 302465, achievement: 9.4, remark: "" },
+            { id: 199983567, name: "Mevrik farm 2", newName: "Mevrik 2", powerPreKvk: 33579329, kvk4Goal: 3760885, progress: 350996, achievement: 9.3, remark: "" },
+            { id: 199970598, name: "ᵁᶜ Nico113", newName: "ᵁᶜ Nico113", powerPreKvk: 31547866, kvk4Goal: 3533361, progress: 321612, achievement: 9.1, remark: "" },
+            { id: 197791854, name: "ZiKo  Dalt ツ", newName: "ZiKo  Dalt ツ", powerPreKvk: 37993609, kvk4Goal: 4255284, progress: 368755, achievement: 8.7, remark: "" },
+            { id: 201544400, name: "ᴵᴮDark", newName: "ᴵᴮDark", powerPreKvk: 41835755, kvk4Goal: 4685605, progress: 401484, achievement: 8.6, remark: "" },
+            { id: 197380701, name: "DeBowen", newName: "DeBowen", powerPreKvk: 36426122, kvk4Goal: 4079726, progress: 348020, achievement: 8.5, remark: "" },
+            { id: 199674057, name: "Chiu chiu", newName: "Chiu chiu", powerPreKvk: 51755886, kvk4Goal: 5796659, progress: 479677, achievement: 8.3, remark: "" },
+            { id: 167008257, name: "ᴮᵒᵗ6ICU", newName: "ᴮᵒᵗ6ICU", powerPreKvk: 38346351, kvk4Goal: 4294791, progress: 350814, achievement: 8.2, remark: "" },
+            { id: 201165815, name: "ᴵᴮWillow", newName: "ᴵᴮWillow", powerPreKvk: 41919698, kvk4Goal: 4695006, progress: 377862, achievement: 8.0, remark: "" },
+            { id: 196635767, name: "TShelby ʰᶜ", newName: "TShelby ʰᶜ", powerPreKvk: 34689358, kvk4Goal: 3885208, progress: 306425, achievement: 7.9, remark: "" },
+            { id: 199125057, name: "Excalot4880", newName: "Excalot4880", powerPreKvk: 28174663, kvk4Goal: 3155562, progress: 242606, achievement: 7.7, remark: "" },
+            { id: 197702319, name: "Mue Dalt ツ", newName: "Mue Dalt ツ", powerPreKvk: 33943296, kvk4Goal: 3801649, progress: 286393, achievement: 7.5, remark: "" },
+            { id: 196872574, name: "WOLF ARMY 01", newName: "WOLF ARMY 01", powerPreKvk: 40596795, kvk4Goal: 4546841, progress: 332317, achievement: 7.3, remark: "" },
+            { id: 198065825, name: "ᴳˢMelih Dalt", newName: "Averell Dalt ツ", powerPreKvk: 25617454, kvk4Goal: 2869155, progress: 199229, achievement: 6.9, remark: "" },
+            { id: 193107946, name: "Krongs 永 23", newName: "Krongs 永 23", powerPreKvk: 63744679, kvk4Goal: 7139404, progress: 487243, achievement: 6.8, remark: "" },
+            { id: 192102200, name: "ᶠᵖ Hunter", newName: "ᶠᵖ Hunter", powerPreKvk: 29012217, kvk4Goal: 3249368, progress: 219512, achievement: 6.8, remark: "" },
+            { id: 198290981, name: "Lord KT EE", newName: "Lord KT EE", powerPreKvk: 45236905, kvk4Goal: 5066533, progress: 310640, achievement: 6.1, remark: "" },
+            { id: 200425853, name: "Damasko", newName: "Damasko", powerPreKvk: 24649330, kvk4Goal: 2760725, progress: 160124, achievement: 5.8, remark: "" },
+            { id: 198160514, name: "Edelweiss ツ", newName: "", powerPreKvk: 31506180, kvk4Goal: 3528692, progress: null, achievement: null, remark: "" },
+            { id: 198191140, name: "Hïrōki", newName: "Hïrōki", powerPreKvk: 42463707, kvk4Goal: 4755935, progress: 273077, achievement: 5.7, remark: "" },
+            { id: 197099116, name: "光LordDarkness", newName: "光LordDarkness", powerPreKvk: 69948725, kvk4Goal: 7834257, progress: 415926, achievement: 5.3, remark: "" },
+            { id: 200451234, name: "Parizzzzzzz", newName: "Parizzzzzzz", powerPreKvk: 29849549, kvk4Goal: 3343149, progress: 155232, achievement: 4.6, remark: "" },
+            { id: 199823222, name: "ĿampangCat", newName: "ĿampangCat", powerPreKvk: 36741203, kvk4Goal: 4115015, progress: 163646, achievement: 4.0, remark: "" },
+            { id: 200011247, name: "Maks310892", newName: "777LoneWolf777", powerPreKvk: 27764035, kvk4Goal: 3109572, progress: 122911, achievement: 4.0, remark: "" },
+            { id: 198604700, name: "ᴮᵃIMAGIN", newName: "ᴮᵃIMAGIN", powerPreKvk: 38780506, kvk4Goal: 4343417, progress: 154956, achievement: 3.6, remark: "" },
+            { id: 192058861, name: "MIBOY", newName: "MIBOY", powerPreKvk: 34638615, kvk4Goal: 3879525, progress: 138141, achievement: 3.6, remark: "" },
+            { id: 193160416, name: "Yaskoh", newName: "Yaskoh", powerPreKvk: 26630618, kvk4Goal: 2982629, progress: 104243, achievement: 3.5, remark: "" },
+            { id: 200076695, name: "๖ۣۜLøøtBøy", newName: "๖ۣۜLøøtBøy", powerPreKvk: 36368069, kvk4Goal: 4073224, progress: 141513, achievement: 3.5, remark: "" },
+            { id: 196532046, name: "rryl", newName: "rryl", powerPreKvk: 32675207, kvk4Goal: 3659623, progress: 126078, achievement: 3.4, remark: "" },
+            { id: 199706315, name: "ᵁᶜFreya", newName: "ᵁᶜFreya", powerPreKvk: 43495245, kvk4Goal: 4871467, progress: 162237, achievement: 3.3, remark: "" },
+            { id: 198653194, name: "ᴿᴸChauBacHo", newName: "ᴿᴸChauBacHo", powerPreKvk: 32887693, kvk4Goal: 3683422, progress: 121011, achievement: 3.3, remark: "" },
+            { id: 200146230, name: "ᴬᴷMarti", newName: "ᴬᴷMarti", powerPreKvk: 37192178, kvk4Goal: 4165524, progress: 129278, achievement: 3.1, remark: "" },
+            { id: 195765863, name: "ᵁᶜㄴŁuukメㄱ", newName: "ᵁᶜㄴŁuukメㄱ", powerPreKvk: 33436772, kvk4Goal: 3744918, progress: 111384, achievement: 3.0, remark: "" },
+            { id: 200454343, name: "Glitch guy", newName: "Glitch guy", powerPreKvk: 24318067, kvk4Goal: 2723624, progress: 72998, achievement: 2.7, remark: "" },
+            { id: 194793930, name: "ÉL GUAPO", newName: "ÉL GUAPO", powerPreKvk: 30874565, kvk4Goal: 3457951, progress: 88335, achievement: 2.6, remark: "" },
+            { id: 179626728, name: "ᴴᴷ luffy 24", newName: "ᴴᴷ luffy 24", powerPreKvk: 38737504, kvk4Goal: 4338600, progress: 103111, achievement: 2.4, remark: "" },
+            { id: 198650769, name: "ᶜˢSpinster", newName: "ᶜˢSpinster", powerPreKvk: 36411810, kvk4Goal: 4078123, progress: 78126, achievement: 1.9, remark: "" },
+            { id: 198167010, name: "ᵀᴮElectrek", newName: "ᵀᴮElectrek", powerPreKvk: 34250227, kvk4Goal: 3836025, progress: 69819, achievement: 1.8, remark: "" },
+            { id: 200423363, name: "Apps78", newName: "Apps78", powerPreKvk: 21909697, kvk4Goal: 2453886, progress: 41105, achievement: 1.7, remark: "" },
+            { id: 198823998, name: "〤Gaida", newName: "〤Gaida", powerPreKvk: 19772276, kvk4Goal: 2214495, progress: 27775, achievement: 1.3, remark: "" },
+            { id: 194502563, name: "Prillie X Laz", newName: "ForSaleAccount", powerPreKvk: 36875016, kvk4Goal: 4130002, progress: 39382, achievement: 1.0, remark: "" },
+            { id: 200026111, name: "OjoDumeh", newName: "OjoDumeh", powerPreKvk: 19153592, kvk4Goal: 2145202, progress: 15468, achievement: 0.7, remark: "" },
+            { id: 200181190, name: "CatEnjoyer", newName: "CatEnjoyer", powerPreKvk: 25508640, kvk4Goal: 2856968, progress: 18404, achievement: 0.6, remark: "" },
+            { id: 197746890, name: "StarBurst", newName: "StarBurst", powerPreKvk: 35019029, kvk4Goal: 3922131, progress: 23115, achievement: 0.6, remark: "" },
+            { id: 197747158, name: "Chief Yamii", newName: "Chief Yamii", powerPreKvk: 20525222, kvk4Goal: 2298825, progress: 8067, achievement: 0.4, remark: "" },
+            { id: 200439772, name: "ᵁᶜCendres", newName: "", powerPreKvk: 28762863, kvk4Goal: 3221441, progress: null, achievement: null, remark: "" },
+            { id: 197308475, name: "DalejandroAp", newName: "DalejandroAp", powerPreKvk: 23597854, kvk4Goal: 2642960, progress: 6483, achievement: 0.2, remark: "" },
+            { id: 193869218, name: "MinaNoShit", newName: "米娜不废话", powerPreKvk: 48668837, kvk4Goal: 5450910, progress: 9500, achievement: 0.2, remark: "" },
+            { id: 201511346, name: "Sniper42", newName: "Sniper42", powerPreKvk: 24520279, kvk4Goal: 2746271, progress: 3273, achievement: 0.1, remark: "" },
+            { id: 197818595, name: "jaguarfarm", newName: "jaguarfarm", powerPreKvk: 26664690, kvk4Goal: 2986445, progress: 2190, achievement: 0.1, remark: "" },
+            { id: 199922869, name: "ᵁᶜMetler", newName: "", powerPreKvk: 28209615, kvk4Goal: 3159477, progress: null, achievement: null, remark: "" },
+            { id: 199490489, name: "Орех63", newName: "Орех63", powerPreKvk: 40737868, kvk4Goal: 4562641, progress: 0, achievement: 0.0, remark: "" },
+            { id: 199838699, name: "ᴵˣHomy42", newName: "ᴵˣHomy42", powerPreKvk: 37551043, kvk4Goal: 4205717, progress: 0, achievement: 0.0, remark: "" },
+            { id: 197497663, name: "ken4an931", newName: "ken4an931", powerPreKvk: 37530462, kvk4Goal: 4203412, progress: 0, achievement: 0.0, remark: "" },
+        ];
+
+        let currentFilter = 'all';
+        let currentData = [...governorData];
+
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Get display value
+        function getDisplayValue(value) {
+            return value !== null ? value : 'N/A';
+        }
+
+        // Populate table
+        function populateTable(data = currentData) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            data.forEach((gov, index) => {
+                const row = document.createElement('tr');
+                const progressDisplay = gov.progress !== null ? formatNumber(gov.progress) : '<span class="na-value">N/A</span>';
+                const achievementDisplay = gov.achievement !== null ? gov.achievement.toFixed(1) : '<span class="na-value">N/A</span>';
+                const progressPercent = gov.achievement !== null ? Math.min(gov.achievement, 100) : 0;
+                const hasNameChanged = gov.newName && gov.newName !== gov.name && gov.newName !== "";
+                
+                row.innerHTML = `
+                    <td class="rank">${index + 1}</td>
+                    <td class="governor-id">${gov.id}</td>
+                    <td class="governor-name">${gov.name}</td>
+                    <td class="new-name">${hasNameChanged ? gov.newName : '<span class="na-value">-</span>'}</td>
+                    <td class="number">${formatNumber(gov.powerPreKvk)}</td>
+                    <td class="number">${formatNumber(gov.kvk4Goal)}</td>
+                    <td class="number">${progressDisplay}</td>
+                    <td>
+                        ${gov.achievement !== null ? `
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%;">
+                                    ${achievementDisplay}%
+                                </div>
+                            </div>
+                        ` : '<span style="color: #8b949e;">N/A</span>'}
+                    </td>
+                    <td class="percent">${achievementDisplay}%</td>
+                    <td class="remark">${gov.remark || '-'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Filter data
+        window.filterData = function(filter) {
+            currentFilter = filter;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (filter === 'namechanged') {
+                currentData = governorData.filter(g => g.newName && g.newName !== g.name && g.newName !== "");
+            } else if (filter === 'withprogress') {
+                currentData = governorData.filter(g => g.progress !== null);
+            } else if (filter === 'noprogress') {
+                currentData = governorData.filter(g => g.progress === null || g.progress === 0);
+            } else {
+                currentData = [...governorData];
+            }
+            
+            populateTable(currentData);
+            updateStats();
+        };
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = governorData.filter(gov => 
+                gov.name.toLowerCase().includes(searchTerm) || 
+                gov.newName.toLowerCase().includes(searchTerm) ||
+                gov.id.toString().includes(searchTerm)
+            );
+            currentData = [...filtered];
+            populateTable(currentData);
+        });
+
+        // Calculate statistics
+        function updateStats() {
+            const totalGovs = governorData.length;
+            const renamed = governorData.filter(g => g.newName && g.newName !== g.name && g.newName !== "").length;
+            const withProgress = governorData.filter(g => g.progress !== null);
+            const avgAchievement = withProgress.length > 0 
+                ? (withProgress.reduce((sum, gov) => sum + (gov.achievement || 0), 0) / withProgress.length).toFixed(1)
+                : 0;
+            
+            document.getElementById('totalGovs').textContent = totalGovs;
+            document.getElementById('nameChanges').textContent = renamed;
+            document.getElementById('withProgress').textContent = withProgress.length;
+            document.getElementById('avgAchievement').textContent = avgAchievement;
+            
+            document.getElementById('statTotalGovs').textContent = totalGovs;
+            document.getElementById('statRenamed').textContent = renamed;
+            document.getElementById('statActive').textContent = withProgress.length;
+            document.getElementById('statAvgAch').textContent = avgAchievement + "%";
+        }
+
+        // Initialize
+        populateTable();
+        updateStats();
+    </script>
+</body>
+</html>
